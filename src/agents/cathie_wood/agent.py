@@ -13,7 +13,7 @@ model = "gemini-2.5-pro"
 
 detector_agent = LlmAgent(
     model=model,
-    name="cathie_wood",
+    name="cathie_wood_agent",
     instruction=CATHIE_WOOD_PROMPT,
     generate_content_config=types.GenerateContentConfig(temperature=0.2),
 )

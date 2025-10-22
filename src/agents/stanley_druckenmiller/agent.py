@@ -13,6 +13,6 @@ model = "gemini-2.5-pro"
 
 detector_agent = LlmAgent(
     model=model,
-    name="stanley_druckenmiller",
+    name="stanley_druckenmiller_agent",
     instruction=STANLEY_DRUCKENMILLER_PROMPT,
 )

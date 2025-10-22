@@ -10,4 +10,6 @@ load_dotenv()
 
 model = "gemini-2.5-pro"
 
-detector_agent = LlmAgent(model=model, name="ben_graham", instruction=BEN_GRAHAM_PROMPT)
+detector_agent = LlmAgent(
+    model=model, name="ben_graham_agent", instruction=BEN_GRAHAM_PROMPT
+)
