@@ -1,19 +1,51 @@
-from google.adk.agents import LlmAgent, SequentialAgent, ParallelAgent
+from google.adk.agents import LlmAgent
 from google.genai import types
-
 from loguru import logger
 from dotenv import load_dotenv
 
-from src.agents.cathie_wood.prompt import CATHIE_WOOD_PROMPT
+from src.agents.investors.cathie_wood.prompt import CATHIE_WOOD_PROMPT
+from src.agents.investors.cathie_wood.schema import CathieWoodSignal
+from src.tools.cathie_wood_analysis import (
+    analyze_disruptive_potential,
+    analyze_innovation_growth,
+    analyze_cathie_wood_valuation,
+    calculate_cathie_wood_score,
+)
 
 load_dotenv()
 
 
-model = "gemini-2.5-pro"
+def build_cathie_wood_agent() -> LlmAgent:
+    """
+    Build Cathie Wood disruptive innovation investing agent with exponential growth analysis tools.
 
-detector_agent = LlmAgent(
-    model=model,
-    name="cathie_wood_agent",
-    instruction=CATHIE_WOOD_PROMPT,
-    generate_content_config=types.GenerateContentConfig(temperature=0.2),
-)
+    This agent implements Wood's investment methodology focusing on:
+    - Disruptive potential assessment (breakthrough technology adoption, R&D intensity, scaling indicators)
+    - Innovation-driven growth analysis (sustainable innovation scaling, reinvestment capacity)
+    - High-growth valuation methodology (exponential DCF with 20% growth, 25x multiples)
+    - Overall innovation score synthesis (breakthrough technology prioritization)
+
+    The agent follows Wood's approach of identifying transformative technologies with
+    exponential growth potential, accepting short-term volatility for multi-year
+    compounding from platform businesses and network effects in large TAM markets.
+    """
+
+    return LlmAgent(
+        model="gemini-2.0-flash-exp",  # Use newer model for innovation-focused analysis
+        name="cathie_wood_agent",
+        instruction=CATHIE_WOOD_PROMPT,
+        tools=[
+            analyze_disruptive_potential,
+            analyze_innovation_growth,
+            analyze_cathie_wood_valuation,
+            calculate_cathie_wood_score,
+        ],
+        generate_content_config=types.GenerateContentConfig(
+            temperature=0.4,  # Higher temperature for creative/optimistic innovation analysis
+            response_mime_type="application/json",
+            response_schema=CathieWoodSignal.model_json_schema(),
+        ),
+    )
+
+
+cathie_wood_agent = build_cathie_wood_agent()
