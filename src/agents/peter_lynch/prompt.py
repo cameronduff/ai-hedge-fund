@@ -1,0 +1,1 @@
+PETER_LYNCH_PROMPT = """"""
