@@ -18,7 +18,7 @@ load_dotenv()
 
 
 technical_agent = LlmAgent(
-    model="gemini-2.0-flash-exp",
+    model="gemini-2.5-pro",
     name="technical_analysis_agent",
     instruction=TECHNICALS_AGENT_PROMPT,
     tools=[

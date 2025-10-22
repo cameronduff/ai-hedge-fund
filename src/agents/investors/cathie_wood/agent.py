@@ -31,7 +31,7 @@ def build_cathie_wood_agent() -> LlmAgent:
     """
 
     return LlmAgent(
-        model="gemini-2.0-flash-exp",  # Use newer model for innovation-focused analysis
+        model="gemini-2.5-pro",  # Use newer model for innovation-focused analysis
         name="cathie_wood_agent",
         instruction=CATHIE_WOOD_PROMPT,
         tools=[
