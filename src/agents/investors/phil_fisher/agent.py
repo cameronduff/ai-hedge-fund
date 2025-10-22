@@ -1,18 +1,31 @@
-from google.adk.agents import LlmAgent, SequentialAgent, ParallelAgent
+from google.adk.agents import LlmAgent
 from google.genai import types
 
-from loguru import logger
-from dotenv import load_dotenv
+from src.agents.investors.phil_fisher.prompt import PHIL_FISHER_PROMPT
+from src.agents.investors.phil_fisher.schema import PhilFisherSignal
+from src.tools.fisher_analysis import (
+    analyze_growth_quality_metrics,
+    analyze_management_excellence,
+    analyze_profit_margins_stability,
+    analyze_competitive_position,
+    calculate_fisher_score,
+)
 
-from src.agents.phil_fisher.prompt import PHIL_FISHER_PROMPT
-
-load_dotenv()
-
-
-model = "gemini-2.5-pro"
-
-detector_agent = LlmAgent(
-    model=model,
+# Phil Fisher Agent with long-term growth and management excellence analysis tools
+phil_fisher_agent = LlmAgent(
+    model="gemini-2.5-pro",
     name="phil_fisher_agent",
     instruction=PHIL_FISHER_PROMPT,
+    tools=[
+        analyze_growth_quality_metrics,
+        analyze_management_excellence,
+        analyze_profit_margins_stability,
+        analyze_competitive_position,
+        calculate_fisher_score,
+    ],
+    generation_config=types.GenerateContentConfig(
+        response_mime_type="application/json",
+        response_schema=PhilFisherSignal.model_json_schema(),
+        temperature=0.2,  # Low temperature for Fisher's methodical, analytical approach
+    ),
 )
