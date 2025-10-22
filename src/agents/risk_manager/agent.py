@@ -13,6 +13,6 @@ model = "gemini-2.5-pro"
 
 detector_agent = LlmAgent(
     model=model,
-    name="risk_manager",
+    name="risk_manager_agent",
     instruction=RISK_MANAGER_PROMPT,
 )

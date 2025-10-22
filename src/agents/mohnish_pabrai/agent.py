@@ -13,6 +13,6 @@ model = "gemini-2.5-pro"
 
 detector_agent = LlmAgent(
     model=model,
-    name="mohnish_pabrai",
+    name="mohnish_pabrai_agent",
     instruction=MOHNISH_PABRAI_PROMPT,
 )
