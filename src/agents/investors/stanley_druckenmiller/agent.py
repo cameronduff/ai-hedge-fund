@@ -27,7 +27,7 @@ tools = [
 ]
 
 stanley_druckenmiller_agent = LlmAgent(
-    model="gemini-2.0-flash-exp",
+    model="gemini-2.5-pro",
     name="stanley_druckenmiller_investment_agent",
     instruction=STANLEY_DRUCKENMILLER_PROMPT,
     tools=tools,

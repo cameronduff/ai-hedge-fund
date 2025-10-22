@@ -17,7 +17,7 @@ load_dotenv()
 
 
 valuation_agent = LlmAgent(
-    model="gemini-2.0-flash-exp",
+    model="gemini-2.5-pro",
     name="valuation_analysis_agent",
     instruction=VALUATION_AGENT_PROMPT,
     tools=[
