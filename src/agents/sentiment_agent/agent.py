@@ -16,7 +16,7 @@ from src.tools.sentiment_analysis import (
 load_dotenv()
 
 sentiment_agent = LlmAgent(
-    model="gemini-2.0-flash-exp",
+    model="gemini-2.5-pro",
     name="sentiment_analysis_agent",
     instruction=SENTIMENT_AGENT_PROMPT,
     tools=[
