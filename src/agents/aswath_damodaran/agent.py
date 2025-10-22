@@ -12,6 +12,6 @@ model = "gemini-2.5-pro"
 
 detector_agent = LlmAgent(
     model=model,
-    name="aswath_damodaran",
+    name="aswath_damodaran_agent",
     instruction=ASWATH_DAMODARAN_PROMPT,
 )

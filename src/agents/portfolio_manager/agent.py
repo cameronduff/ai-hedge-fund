@@ -13,6 +13,6 @@ model = "gemini-2.5-pro"
 
 detector_agent = LlmAgent(
     model=model,
-    name="portfolio_manager",
+    name="portfolio_manager_agent",
     instruction=PORTFOLIO_MANAGER_PROMPT,
 )

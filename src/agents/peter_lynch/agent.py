@@ -13,7 +13,7 @@ model = "gemini-2.5-pro"
 
 detector_agent = LlmAgent(
     model=model,
-    name="peter_lynch",
+    name="peter_lynch_agent",
     instruction=PETER_LYNCH_PROMPT,
     generate_content_config=types.GenerateContentConfig(temperature=0.2),
 )
