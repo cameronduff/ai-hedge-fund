@@ -1,0 +1,1 @@
+CHARLIE_MUNGER_PROMPT = """"""
