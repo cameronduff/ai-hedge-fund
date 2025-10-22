@@ -1,18 +1,31 @@
-from google.adk.agents import LlmAgent, SequentialAgent, ParallelAgent
+from google.adk.agents import LlmAgent
 from google.genai import types
 
-from loguru import logger
-from dotenv import load_dotenv
+from src.agents.investors.warren_buffett.prompt import WARREN_BUFFETT_PROMPT
+from src.agents.investors.warren_buffett.schema import WarrenBuffettSignal
+from src.tools.buffett_analysis import (
+    analyze_business_quality,
+    analyze_competitive_moat,
+    analyze_management_excellence,
+    analyze_earnings_consistency,
+    calculate_buffett_score,
+)
 
-from src.agents.warren_buffett.prompt import WARREN_BUFFETT_PROMPT
-
-load_dotenv()
-
-
-model = "gemini-2.5-pro"
-
-detector_agent = LlmAgent(
-    model=model,
+# Warren Buffett Agent with value investing and business quality analysis tools
+warren_buffett_agent = LlmAgent(
+    model="gemini-2.5-pro",
     name="warren_buffett_agent",
     instruction=WARREN_BUFFETT_PROMPT,
+    tools=[
+        analyze_business_quality,
+        analyze_competitive_moat,
+        analyze_management_excellence,
+        analyze_earnings_consistency,
+        calculate_buffett_score,
+    ],
+    generation_config=types.GenerateContentConfig(
+        response_mime_type="application/json",
+        response_schema=WarrenBuffettSignal.model_json_schema(),
+        temperature=0.1,  # Very low temperature for Buffett's disciplined, analytical approach
+    ),
 )
