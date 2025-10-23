@@ -1,4 +1,5 @@
 from google.adk.agents import LlmAgent
+from google.adk.tools import google_search
 from google.genai import types
 
 from src.agents.fundamentals_agent.prompt import FUNDAMENTALS_AGENT_PROMPT
@@ -17,6 +18,7 @@ fundamentals_agent = LlmAgent(
     name="fundamentals_agent",
     instruction=FUNDAMENTALS_AGENT_PROMPT,
     tools=[
+        google_search,
         analyze_profitability_metrics,
         analyze_growth_metrics,
         analyze_financial_health,
