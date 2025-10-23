@@ -1,158 +1,177 @@
-# AI Hedge Fund
+# AI Hedge Fund (Educational Prototype)
 
-This is a proof of concept for an AI-powered hedge fund.  The goal of this project is to explore the use of AI to make trading decisions.  This project is for **educational** purposes only and is not intended for real trading or investment.
+This repository is a simplified, agent‑oriented prototype exploring how multiple investing philosophies and analytical lenses can be orchestrated with LLMs. It is adapted from an upstream project but pared down: there is currently no web app, no backtester module, and no CLI flags for multi‑ticker/date range operation. The current code focuses on composing agents in a pipeline and providing a standalone Trading 212 client for experimentation.
 
-This system employs several agents working together:
+> IMPORTANT: This project is for educational and research purposes only. It does not execute real trades automatically. Nothing here constitutes investment advice.
 
-1. Aswath Damodaran Agent - The Dean of Valuation, focuses on story, numbers, and disciplined valuation
-2. Ben Graham Agent - The godfather of value investing, only buys hidden gems with a margin of safety
-3. Bill Ackman Agent - An activist investor, takes bold positions and pushes for change
-4. Cathie Wood Agent - The queen of growth investing, believes in the power of innovation and disruption
-5. Charlie Munger Agent - Warren Buffett's partner, only buys wonderful businesses at fair prices
-6. Michael Burry Agent - The Big Short contrarian who hunts for deep value
-7. Mohnish Pabrai Agent - The Dhandho investor, who looks for doubles at low risk
-8. Peter Lynch Agent - Practical investor who seeks "ten-baggers" in everyday businesses
-9. Phil Fisher Agent - Meticulous growth investor who uses deep "scuttlebutt" research 
-10. Rakesh Jhunjhunwala Agent - The Big Bull of India
-11. Stanley Druckenmiller Agent - Macro legend who hunts for asymmetric opportunities with growth potential
-12. Warren Buffett Agent - The oracle of Omaha, seeks wonderful companies at a fair price
-13. Valuation Agent - Calculates the intrinsic value of a stock and generates trading signals
-14. Sentiment Agent - Analyzes market sentiment and generates trading signals
-15. Fundamentals Agent - Analyzes fundamental data and generates trading signals
-16. Technicals Agent - Analyzes technical indicators and generates trading signals
-17. Risk Manager - Calculates risk metrics and sets position limits
-18. Portfolio Manager - Makes final trading decisions and generates orders
+## Core Concepts
 
-<img width="1042" alt="Screenshot 2025-03-22 at 6 19 07 PM" src="https://github.com/user-attachments/assets/cbae3dcf-b571-490d-b0ad-3f0f035ac0d4" />
+The system builds an agent pipeline (see `src/pipeline.py`) combining:
 
-Note: the system does not actually make any trades.
+Research Agents (run in parallel):
 
-[![Twitter Follow](https://img.shields.io/twitter/follow/virattt?style=social)](https://twitter.com/virattt)
+- Fundamentals Agent
+- Technicals Agent
+- Sentiment Agent
+- Valuation Agent
+
+Investor Philosophy Agents (run in parallel):
+
+- Aswath Damodaran
+- Ben Graham
+- Bill Ackman
+- Cathie Wood
+- Charlie Munger
+- Michael Burry
+- Mohnish Pabrai
+- Peter Lynch
+- Phil Fisher
+- Rakesh Jhunjhunwala
+- Stanley Druckenmiller
+- Warren Buffett
+
+Execution Layer (sequential):
+
+- Risk Manager
+- Portfolio Manager
+
+Each agent has a prompt and schema under `src/agents/...` and is aggregated into a looping composite (`LoopAgent`) with retry wrapping to handle transient LLM/API errors.
+
+## Current State / What Works
+
+- Pipeline construction (`get_pipeline`) and a demonstrative run in `src/pipeline.py` (currently using a sample GCS video input — a placeholder to prove invocation mechanics).
+- Runner utilities in `src/runner.py` to execute the pipeline asynchronously and harvest final consensus output.
+- A fully featured Trading 212 client + CLI in `src/clients/Trading212.py` supporting account inspection, portfolio, orders (demo/live), pies, history, metadata, quotes (Yahoo Finance), and simple agent‑style trade helpers.
+
+## What Is NOT Present (Yet)
+
+- Backtesting module referenced in the original upstream README.
+- Web application / UI.
+- Multi‑ticker orchestration and date‑window analysis CLI.
+- Integrated financial datasets ingestion (only the skeleton/agents exist; data pulls are not wired here).
+
+## Installation
+
+The project uses `pyproject.toml` (PEP 621). Dependencies are minimal.
+
+```bash
+git clone https://github.com/cameronduff/ai-hedge-fund.git
+cd ai-hedge-fund
+python -m venv .venv
+source .venv/bin/activate  # macOS/Linux
+pip install -e .
+```
+
+Or, if you prefer just installing dependencies:
+
+```bash
+pip install .
+```
+
+Python 3.13+ is specified in `pyproject.toml` (adjust locally if needed).
+
+## Configuration (Environment Variables)
+
+Only the Trading 212 client currently consumes environment variables:
+
+Required for CLI operations:
+
+- `T212_API_KEY` – Trading 212 API key
+- `T212_API_SECRET` – Trading 212 API secret
+
+Optional:
+
+- `T212_ENV` – `demo` (default) or `live`
+- `T212_BASE_URL` – override base API URL (useful for mocking)
+
+Example `.env` (create manually – there is no template yet):
+
+```
+T212_API_KEY=your_key_here
+T212_API_SECRET=your_secret_here
+T212_ENV=demo
+```
+
+Load it (if desired) with a tool like `python-dotenv` or by exporting directly in your shell.
+
+## Running the Agent Pipeline
+
+For now the main entry point (`main.py`) just prints a greeting. To execute the pipeline demo:
+
+```bash
+python src/pipeline.py
+```
+
+This will:
+
+1. Build the composite agent pipeline.
+2. Run it against a placeholder GCS video URI (replace with your own input if adapting the content modality).
+3. Log events and final output via `loguru`.
+
+If you adapt it to text inputs, modify the invocation in the `__main__` block of `src/pipeline.py` to construct a `types.Content` with textual parts instead of a video URI.
+
+## Using the Trading 212 CLI
+
+The client resides at `src/clients/Trading212.py` and can be executed directly once environment variables are set.
+
+List available commands:
+
+```bash
+python src/clients/Trading212.py --help
+```
+
+Examples:
+
+```bash
+# Account & portfolio
+python src/clients/Trading212.py cash
+python src/clients/Trading212.py account
+python src/clients/Trading212.py portfolio
+python src/clients/Trading212.py position AAPL
+
+# Market data (Yahoo Finance)
+python src/clients/Trading212.py quote AAPL
+
+# Place a market order (BUY 1 share AAPL demo env)
+python src/clients/Trading212.py buy AAPL 1
+
+# Simple decision helper
+python src/clients/Trading212.py agent-decide VUSA VUSA.L --threshold 1.0
+```
+
+Note: In live environment only market orders are supported; a SELL uses negative quantity internally (handled for you by `agent.sell`).
+
+## Roadmap / Ideas
+
+- Add real fundamental + sentiment data ingestion layer (financial APIs, news feeds).
+- Implement backtester harness for agent consensus strategies.
+- Web dashboard for agent outputs, risk metrics, and trade recommendations.
+- Persistent session storage (database) instead of in‑memory.
+- Unit tests & CI workflow.
+- `.env.example` and secrets management guidance.
+- Expand agent decision logic to yield structured trade recommendations.
+
+## Contributing
+
+Pull requests are welcome. Please keep them focused and small (one feature or fix per PR). Suggested approach:
+
+1. Open an issue describing desired change.
+2. Branch from `main`.
+3. Implement + add minimal tests if code behavior changes.
+4. Submit PR referencing the issue.
 
 ## Disclaimer
 
-This project is for **educational and research purposes only**.
-
-- Not intended for real trading or investment
-- No investment advice or guarantees provided
-- Creator assumes no liability for financial losses
-- Consult a financial advisor for investment decisions
-- Past performance does not indicate future results
-
-By using this software, you agree to use it solely for learning purposes.
-
-## Table of Contents
-- [How to Install](#how-to-install)
-- [How to Run](#how-to-run)
-  - [⌨️ Command Line Interface](#️-command-line-interface)
-  - [🖥️ Web Application](#️-web-application)
-- [How to Contribute](#how-to-contribute)
-- [Feature Requests](#feature-requests)
-- [License](#license)
-
-## How to Install
-
-Before you can run the AI Hedge Fund, you'll need to install it and set up your API keys. These steps are common to both the full-stack web application and command line interface.
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/virattt/ai-hedge-fund.git
-cd ai-hedge-fund
-```
-
-### 2. Set up API keys
-
-Create a `.env` file for your API keys:
-```bash
-# Create .env file for your API keys (in the root directory)
-cp .env.example .env
-```
-
-Open and edit the `.env` file to add your API keys:
-```bash
-# For running LLMs hosted by openai (gpt-4o, gpt-4o-mini, etc.)
-OPENAI_API_KEY=your-openai-api-key
-
-# For getting financial data to power the hedge fund
-FINANCIAL_DATASETS_API_KEY=your-financial-datasets-api-key
-```
-
-**Important**: You must set at least one LLM API key (e.g. `OPENAI_API_KEY`, `GROQ_API_KEY`, `ANTHROPIC_API_KEY`, or `DEEPSEEK_API_KEY`) for the hedge fund to work. 
-
-**Financial Data**: Data for AAPL, GOOGL, MSFT, NVDA, and TSLA is free and does not require an API key. For any other ticker, you will need to set the `FINANCIAL_DATASETS_API_KEY` in the .env file.
-
-## How to Run
-
-### ⌨️ Command Line Interface
-
-You can run the AI Hedge Fund directly via terminal. This approach offers more granular control and is useful for automation, scripting, and integration purposes.
-
-<img width="992" alt="Screenshot 2025-01-06 at 5 50 17 PM" src="https://github.com/user-attachments/assets/e8ca04bf-9989-4a7d-a8b4-34e04666663b" />
-
-#### Quick Start
-
-1. Install Poetry (if not already installed):
-```bash
-curl -sSL https://install.python-poetry.org | python3 -
-```
-
-2. Install dependencies:
-```bash
-poetry install
-```
-
-#### Run the AI Hedge Fund
-```bash
-poetry run python src/main.py --ticker AAPL,MSFT,NVDA
-```
-
-You can also specify a `--ollama` flag to run the AI hedge fund using local LLMs.
-
-```bash
-poetry run python src/main.py --ticker AAPL,MSFT,NVDA --ollama
-```
-
-You can optionally specify the start and end dates to make decisions over a specific time period.
-
-```bash
-poetry run python src/main.py --ticker AAPL,MSFT,NVDA --start-date 2024-01-01 --end-date 2024-03-01
-```
-
-#### Run the Backtester
-```bash
-poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA
-```
-
-**Example Output:**
-<img width="941" alt="Screenshot 2025-01-06 at 5 47 52 PM" src="https://github.com/user-attachments/assets/00e794ea-8628-44e6-9a84-8f8a31ad3b47" />
-
-
-Note: The `--ollama`, `--start-date`, and `--end-date` flags work for the backtester, as well!
-
-### 🖥️ Web Application
-
-The new way to run the AI Hedge Fund is through our web application that provides a user-friendly interface. This is recommended for users who prefer visual interfaces over command line tools.
-
-Please see detailed instructions on how to install and run the web application [here](https://github.com/virattt/ai-hedge-fund/tree/main/app).
-
-<img width="1721" alt="Screenshot 2025-06-28 at 6 41 03 PM" src="https://github.com/user-attachments/assets/b95ab696-c9f4-416c-9ad1-51feb1f5374b" />
-
-
-## How to Contribute
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
-
-**Important**: Please keep your pull requests small and focused.  This will make it easier to review and merge.
-
-## Feature Requests
-
-If you have a feature request, please open an [issue](https://github.com/virattt/ai-hedge-fund/issues) and make sure it is tagged with `enhancement`.
+Use at your own risk. No warranties, no guarantees of performance. This software does not provide investment advice and should not be used for real-money decision making without independent verification.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License. See `LICENSE` (add if missing).
+
+## Attribution
+
+Inspired by an upstream AI hedge fund concept; reworked to match the current trimmed feature set.
+
+---
+
+If you extend this project (e.g., backtesting or UI), remember to update this README accordingly.
