@@ -45,9 +45,8 @@ def build_bill_ackman_agent() -> LlmAgent:
         ],
         generate_content_config=types.GenerateContentConfig(
             temperature=0.2,  # Low temperature for disciplined, consistent analysis
-            response_mime_type="application/json",
-            response_schema=BillAckmanSignal.model_json_schema(),
         ),
+        output_schema=BillAckmanSignal,
     )
 
 

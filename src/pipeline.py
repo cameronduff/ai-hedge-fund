@@ -112,11 +112,93 @@ def get_pipeline() -> BaseAgent:
 # ---------------------------------------------------------------------
 if __name__ == "__main__":
     from src.runner import run_pipeline
+    from src.clients.Trading212 import get_agent
+    from src.utils.context_builder import build_account_context, build_pies_context
 
-    APP_NAME = "compliance_tagging_demo"
-    test_gcs_uri = "gs://compliance-poc-videos/M2428051-1080-7830.mp4"
+    # Optional: focus on a specific pie
+    PIE_ID = 5855432  # set to None to include all pies
 
-    logger.info("Starting video description test...")
+    APP_NAME = "ai_hedge_fund"  # change if you have a specific ADK app name
+
+    logger.info("Building Trading 212 context...")
+    agent = get_agent()
+
+    # 1) Build the two context JSONs
+    account_ctx = build_account_context(agent, top_n_positions=60)
+    pies_ctx = build_pies_context(agent, include_plans=True)
+
+    # Optionally filter to just one pie (and its plan)
+    if PIE_ID is not None:
+        pies_list = pies_ctx.get("pies", [])
+        pies_ctx["pies"] = [p for p in pies_list if p.get("id") == PIE_ID]
+        plans = pies_ctx.get("rebalance_plans", {})
+        # keep only the focused pie’s plan if present
+        key_str = str(PIE_ID)
+        pies_ctx["rebalance_plans"] = (
+            {key_str: plans.get(key_str) or plans.get(PIE_ID)}
+            if plans and (plans.get(key_str) or plans.get(PIE_ID))
+            else {}
+        )
+
+    # 2) Author the task envelope (what you want the pipeline to do)
+    task_text = (
+        "Using my Trading 212 account context and pies, identify 3 dividend stocks to add. "
+        "Propose target weights per pie (weights sum to 1.0 per pie) and produce market orders "
+        "to move toward the targets while respecting risk. Prefer instruments available on Trading 212 "
+        "(LSE or US)."
+    )
+
+    task_cfg = {
+        "min_dividend_yield": 0.02,
+        "risk_budget": "moderate",
+        "max_positions_per_pie": 25,
+        "execution": {
+            "order_type": "MARKET",
+            "env": account_ctx.get("account", {}).get("env", "demo"),
+        },
+        "fx": "account_currency",
+        "focus_pie_id": PIE_ID,
+    }
+
+    task_envelope = {
+        "schema_version": "1.0",
+        "task": task_text,
+        "constraints": task_cfg,
+        "output_contract": {
+            "recommendations": [
+                {
+                    "ticker": "string",
+                    "exchange": "string",
+                    "weight": 0.10,
+                    "reason": "string",
+                }
+            ],
+            "actions": [
+                {"type": "BUY|SELL", "ticker": "string", "qty": 0.0, "why": "string"}
+            ],
+            "notes": "string",
+        },
+        "instructions": [
+            "Use t212_account and t212_pies JSON as the single source of portfolio truth.",
+            "If recommending new assets, include ticker, exchange, rationale, and target weight (0..1).",
+            "Return ONLY a single JSON object that matches output_contract.",
+        ],
+    }
+
+    # 3) Build a single query string with three JSON blocks
+    query = (
+        "BEGIN_JSON t212_account\n"
+        + json.dumps(account_ctx, separators=(",", ":"), ensure_ascii=False)
+        + "\nEND_JSON t212_account\n\n"
+        "BEGIN_JSON t212_pies\n"
+        + json.dumps(pies_ctx, separators=(",", ":"), ensure_ascii=False)
+        + "\nEND_JSON t212_pies\n\n"
+        "BEGIN_JSON task\n"
+        + json.dumps(task_envelope, separators=(",", ":"), ensure_ascii=False)
+        + "\nEND_JSON task"
+    )
+
+    logger.info("Starting pipeline...")
     pipeline = get_pipeline()
-    result = run_pipeline(pipeline, APP_NAME, test_gcs_uri)
+    result = run_pipeline(pipeline, APP_NAME, query)
     logger.success(result)

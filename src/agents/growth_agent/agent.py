@@ -27,9 +27,8 @@ growth_agent = LlmAgent(
         analyze_insider_activity,
         assess_financial_stability,
     ],
-    generation_config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=GrowthAgentOutput.model_json_schema(),
+    generate_content_config=types.GenerateContentConfig(
         temperature=0.3,  # Moderate temperature for balanced growth analysis
     ),
+    output_schema=GrowthAgentOutput,
 )
