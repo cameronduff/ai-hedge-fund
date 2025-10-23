@@ -8,7 +8,7 @@ from google.genai import types
 from loguru import logger
 
 
-async def run_pipeline_async(pipeline: BaseAgent, app_name: str, gcs_uri: str) -> dict:
+async def run_pipeline_async(pipeline: BaseAgent, app_name: str, query: str) -> dict:
     user_id = str(uuid.uuid4())
     session_service = InMemorySessionService()
     session = await session_service.create_session(app_name=app_name, user_id=user_id)
@@ -16,7 +16,7 @@ async def run_pipeline_async(pipeline: BaseAgent, app_name: str, gcs_uri: str) -
 
     new_message = types.Content(
         role="user",
-        parts=[types.Part.from_uri(file_uri=gcs_uri, mime_type="video/mp4")],
+        parts=[types.Part(text=query)],
     )
 
     final_text = ""
@@ -48,5 +48,5 @@ async def run_pipeline_async(pipeline: BaseAgent, app_name: str, gcs_uri: str) -
     return {"output": {}}
 
 
-def run_pipeline(pipeline: BaseAgent, app_name: str, gcs_uri: str) -> dict:
-    return asyncio.run(run_pipeline_async(pipeline, app_name, gcs_uri))
+def run_pipeline(pipeline: BaseAgent, app_name: str, query: str) -> dict:
+    return asyncio.run(run_pipeline_async(pipeline, app_name, query))
