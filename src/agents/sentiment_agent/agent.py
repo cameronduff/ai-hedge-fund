@@ -29,9 +29,8 @@ sentiment_agent = LlmAgent(
         generate_sentiment_signal,
         assess_market_sentiment,
     ],
-    generation_config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=SentimentAgentOutput.model_json_schema(),
+    generate_content_config=types.GenerateContentConfig(
         temperature=0.4,  # Higher temperature to capture nuanced sentiment
     ),
+    output_schema=SentimentAgentOutput,
 )

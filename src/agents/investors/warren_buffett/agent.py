@@ -23,9 +23,8 @@ warren_buffett_agent = LlmAgent(
         analyze_earnings_consistency,
         calculate_buffett_score,
     ],
-    generation_config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=WarrenBuffettSignal.model_json_schema(),
+    generate_content_config=types.GenerateContentConfig(
         temperature=0.1,  # Very low temperature for Buffett's disciplined, analytical approach
     ),
+    output_schema=WarrenBuffettSignal,
 )

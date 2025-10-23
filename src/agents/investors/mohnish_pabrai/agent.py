@@ -23,9 +23,8 @@ mohnish_pabrai_agent = LlmAgent(
         analyze_business_simplicity,
         calculate_pabrai_score,
     ],
-    generation_config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=MohnishPabraiSignal.model_json_schema(),
+    generate_content_config=types.GenerateContentConfig(
         temperature=0.2,  # Low temperature for systematic, checklist-driven approach
     ),
+    output_schema=MohnishPabraiSignal,
 )

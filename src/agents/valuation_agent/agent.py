@@ -30,9 +30,8 @@ valuation_agent = LlmAgent(
         calculate_residual_income,
         aggregate_valuation_methods,
     ],
-    generation_config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=ValuationAgentOutput.model_json_schema(),
+    generate_content_config=types.GenerateContentConfig(
         temperature=0.1,  # Low temperature for precise, data-driven valuation
     ),
+    output_schema=ValuationAgentOutput,
 )
