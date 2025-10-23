@@ -42,9 +42,8 @@ def build_cathie_wood_agent() -> LlmAgent:
         ],
         generate_content_config=types.GenerateContentConfig(
             temperature=0.4,  # Higher temperature for creative/optimistic innovation analysis
-            response_mime_type="application/json",
-            response_schema=CathieWoodSignal.model_json_schema(),
         ),
+        output_schema=CathieWoodSignal,
     )
 
 

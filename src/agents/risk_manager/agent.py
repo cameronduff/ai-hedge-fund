@@ -23,9 +23,8 @@ risk_manager_agent = LlmAgent(
         calculate_position_limits,
         assess_portfolio_risk_concentration,
     ],
-    generation_config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=RiskManagerOutput.model_json_schema(),
+    generate_content_config=types.GenerateContentConfig(
         temperature=0.1,  # Very low temperature for precise risk calculations
     ),
+    output_schema=RiskManagerOutput,
 )

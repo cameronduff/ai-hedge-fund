@@ -23,9 +23,8 @@ peter_lynch_agent = LlmAgent(
         analyze_lynch_sentiment,
         calculate_lynch_score,
     ],
-    generation_config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=PeterLynchSignal.model_json_schema(),
+    generate_content_config=types.GenerateContentConfig(
         temperature=0.3,  # Moderate temperature for Lynch's practical, intuitive approach
     ),
+    output_schema=PeterLynchSignal,
 )

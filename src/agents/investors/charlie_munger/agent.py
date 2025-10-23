@@ -45,9 +45,8 @@ def build_charlie_munger_agent() -> LlmAgent:
         ],
         generate_content_config=types.GenerateContentConfig(
             temperature=0.1,  # Very low temperature for rational, consistent analysis
-            response_mime_type="application/json",
-            response_schema=CharlieMungerSignal.model_json_schema(),
         ),
+        output_schema=CharlieMungerSignal,
     )
 
 

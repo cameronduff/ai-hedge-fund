@@ -23,9 +23,8 @@ phil_fisher_agent = LlmAgent(
         analyze_competitive_position,
         calculate_fisher_score,
     ],
-    generation_config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=PhilFisherSignal.model_json_schema(),
+    generate_content_config=types.GenerateContentConfig(
         temperature=0.2,  # Low temperature for Fisher's methodical, analytical approach
     ),
+    output_schema=PhilFisherSignal,
 )

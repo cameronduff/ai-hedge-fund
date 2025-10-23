@@ -5,7 +5,7 @@ from google.genai import types
 from dotenv import load_dotenv
 
 from src.agents.technicals_agent.prompt import TECHNICAL_AGENT_PROMPT
-from src.agents.technicals_agent.schema import TechnicalsAgentOutput
+from src.agents.technicals_agent.schema import TechnicalAgentOutput
 from src.tools.technical_analysis import (
     calculate_trend_indicators,
     calculate_mean_reversion_indicators,
@@ -32,9 +32,8 @@ technical_agent = LlmAgent(
         calculate_statistical_indicators,
         combine_technical_signals,
     ],
-    generation_config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=TechnicalsAgentOutput.model_json_schema(),
+    generate_content_config=types.GenerateContentConfig(
         temperature=0.2,  # Low temperature for precise technical analysis
     ),
+    output_schema=TechnicalAgentOutput,
 )

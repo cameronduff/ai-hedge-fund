@@ -25,9 +25,8 @@ fundamentals_agent = LlmAgent(
         analyze_valuation_ratios,
         calculate_fundamental_score,
     ],
-    generation_config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=FundamentalsAgentOutput.model_json_schema(),
+    generate_content_config=types.GenerateContentConfig(
         temperature=0.1,  # Very low temperature for precise fundamental analysis
     ),
+    output_schema=FundamentalsAgentOutput,
 )

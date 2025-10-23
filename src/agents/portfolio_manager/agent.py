@@ -32,9 +32,8 @@ portfolio_manager_agent = LlmAgent(
         optimize_trade_timing,
         exit_loop,
     ],
-    generation_config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=PortfolioManagerOutput.model_json_schema(),
+    generate_content_config=types.GenerateContentConfig(
         temperature=0.2,  # Low temperature for disciplined, systematic portfolio management
     ),
+    output_schema=PortfolioManagerOutput,
 )

@@ -7,9 +7,9 @@ from src.agents.investors.ben_graham.prompt import BEN_GRAHAM_PROMPT
 from src.agents.investors.ben_graham.schema import BenGrahamSignal
 from src.tools.graham_analysis import (
     analyze_earnings_stability,
-    analyze_financial_strength, 
+    analyze_financial_strength,
     analyze_valuation_graham,
-    calculate_graham_score
+    calculate_graham_score,
 )
 
 load_dotenv()
@@ -37,14 +37,13 @@ def build_ben_graham_agent() -> LlmAgent:
         tools=[
             analyze_earnings_stability,
             analyze_financial_strength,
-            analyze_valuation_graham, 
-            calculate_graham_score
+            analyze_valuation_graham,
+            calculate_graham_score,
         ],
         generate_content_config=types.GenerateContentConfig(
             temperature=0.2,  # Low temperature for conservative, consistent analysis
-            response_mime_type="application/json",
-            response_schema=BenGrahamSignal.model_json_schema(),
         ),
+        output_schema=BenGrahamSignal,
     )
 
 

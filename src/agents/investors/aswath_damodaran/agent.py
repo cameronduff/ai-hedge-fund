@@ -44,9 +44,8 @@ def build_aswath_damodaran_agent() -> LlmAgent:
         ],
         generate_content_config=types.GenerateContentConfig(
             temperature=0.1,  # Low temperature for consistent analytical approach
-            response_mime_type="application/json",
-            response_schema=AswathDamodaranSignal.model_json_schema(),
         ),
+        output_schema=AswathDamodaranSignal,
     )
 
 

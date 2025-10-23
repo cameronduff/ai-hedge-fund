@@ -23,9 +23,8 @@ michael_burry_agent = LlmAgent(
         analyze_contrarian_sentiment,
         calculate_burry_score,
     ],
-    generation_config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=MichaelBurrySignal.model_json_schema(),
+    generate_content_config=types.GenerateContentConfig(
         temperature=0.1,  # Low temperature for analytical precision like Burry
     ),
+    output_schema=MichaelBurrySignal,
 )

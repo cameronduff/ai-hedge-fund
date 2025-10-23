@@ -23,9 +23,8 @@ rakesh_jhunjhunwala_agent = LlmAgent(
         analyze_cash_flow_quality,
         calculate_jhunjhunwala_score,
     ],
-    generation_config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=RakeshJhunjhunwalaSignal.model_json_schema(),
+    generate_content_config=types.GenerateContentConfig(
         temperature=0.1,  # Very low temperature for Jhunjhunwala's disciplined, analytical approach
     ),
+    output_schema=RakeshJhunjhunwalaSignal,
 )

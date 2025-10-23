@@ -31,9 +31,8 @@ stanley_druckenmiller_agent = LlmAgent(
     name="stanley_druckenmiller_investment_agent",
     instruction=STANLEY_DRUCKENMILLER_PROMPT,
     tools=tools,
-    response_config=types.GenerateContentConfig(
-        response_mime_type="application/json",
-        response_schema=StanleyDruckenmillerOutput.model_json_schema(),
-        temperature=0.1,
+    generate_content_config=types.GenerateContentConfig(
+        temperature=0.1,  # Very low temperature for Druckenmiller's disciplined approach
     ),
+    output_schema=StanleyDruckenmillerOutput,
 )
