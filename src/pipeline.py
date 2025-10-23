@@ -11,6 +11,7 @@ from google.genai.types import Content, Part
 from src.agents.retrying_agent.agent import wrap_llm_agents_with_retry
 
 from src.agents.fundamentals_agent.agent import fundamentals_agent
+from src.agents.growth_agent.agent import growth_agent
 from src.agents.technicals_agent.agent import technical_agent
 from src.agents.sentiment_agent.agent import sentiment_agent
 from src.agents.valuation_agent.agent import valuation_agent
@@ -36,11 +37,25 @@ from src.agents.portfolio_manager.agent import portfolio_manager_agent
 # Build the full parallel pipeline + collector
 # ---------------------------------------------------------------------
 def get_pipeline() -> BaseAgent:
+    """
+    Constructs the AI Hedge Fund pipeline using Google ADK.
+
+    The pipeline is structured as a loop to allow for iterative refinement
+    of analysis until a final decision is made.
+
+    The pipeline is structured as follows:
+    1.  A parallel research agent gathers insights on a stock from multiple perspectives.
+    2.  A parallel investors agent simulates getting opinions from a team of world-class investors.
+    3.  A sequential execution agent that first assesses risk and then makes a portfolio decision.
+    4.  These agents are placed in a LoopAgent to iterate until the portfolio manager
+        is confident enough to make a decision and exit the loop.
+    """
 
     research = ParallelAgent(
         name="research_agent",
         sub_agents=[
             fundamentals_agent,
+            growth_agent,
             technical_agent,
             sentiment_agent,
             valuation_agent,
@@ -75,12 +90,12 @@ def get_pipeline() -> BaseAgent:
             investors,
             execution,
         ],
-        max_iterations=5,
+        max_iterations=5,  # The portfolio_manager's exit tool will be the primary exit condition
     )
 
     pipeline_with_retry = wrap_llm_agents_with_retry(
         pipeline,
-        max_429_retries=2,  # single retry for 429; Vertex queues automatically
+        max_429_retries=10,  # single retry for 429; Vertex queues automatically
         base_delay_429=1.0,  # minimal wait (s)
         max_transient_retries=2,  # at most two transient retries (5xx/UNAVAILABLE)
         base_delay_transient=1.0,  # smaller base delay
