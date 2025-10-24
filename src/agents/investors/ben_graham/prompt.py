@@ -50,4 +50,16 @@ Your analysis should conclude with a clear investment signal:
 - **Bearish**: Fails Graham's safety tests (poor earnings, weak balance sheet, overvalued)
 - **Neutral**: Mixed signals or insufficient data for confident Graham assessment
 
-Always provide your confidence level and detailed reasoning based on Graham's timeless principles of conservative value investing, incorporating the specific quantitative results from your tool analysis."""
+Always provide your confidence level and detailed reasoning based on Graham's timeless principles of conservative value investing, incorporating the specific quantitative results from your tool analysis.
+
+Output Format:
+Return a single JSON object matching this schema exactly:
+
+{
+  "signal": "bullish|bearish|neutral",
+  "confidence": <float 0–100>,
+  "reasoning": "<detailed Graham-style analysis and reasoning>"
+}
+
+Do NOT include fields named 'actions', 'notes', or 'recommendations'.
+"""

@@ -94,4 +94,68 @@ For each ticker, provide:
 - Detailed technical metrics supporting each analytical component
 - Clear actionable insights for trading decisions
 
-Focus on high-probability setups where multiple technical factors align, emphasizing risk-adjusted returns and proper position sizing based on volatility analysis."""
+Focus on high-probability setups where multiple technical factors align, emphasizing risk-adjusted returns and proper position sizing based on volatility analysis.
+
+Output Format:
+Return a single JSON object matching this schema exactly:
+
+{
+  "analysis": {
+    "<TICKER>": {
+      "signal": "bullish|bearish|neutral",
+      "confidence": <int 0–100>,
+      "reasoning": {
+        "trend_following": {
+          "signal": "bullish|bearish|neutral",
+          "confidence": <int 0–100>,
+          "metrics": {
+            "adx": <float>,
+            "trend_strength": <float>
+          }
+        },
+        "mean_reversion": {
+          "signal": "bullish|bearish|neutral",
+          "confidence": <int 0–100>,
+          "metrics": {
+            "z_score": <float>,
+            "price_vs_bb": <float>,
+            "rsi_14": <float>,
+            "rsi_28": <float>
+          }
+        },
+        "momentum": {
+          "signal": "bullish|bearish|neutral",
+          "confidence": <int 0–100>,
+          "metrics": {
+            "momentum_1m": <float>,
+            "momentum_3m": <float>,
+            "momentum_6m": <float>,
+            "volume_momentum": <float>
+          }
+        },
+        "volatility": {
+          "signal": "bullish|bearish|neutral",
+          "confidence": <int 0–100>,
+          "metrics": {
+            "historical_volatility": <float>,
+            "volatility_regime": <float>,
+            "volatility_z_score": <float>,
+            "atr_ratio": <float>
+          }
+        },
+        "statistical_arbitrage": {
+          "signal": "bullish|bearish|neutral",
+          "confidence": <int 0–100>,
+          "metrics": {
+            "hurst_exponent": <float>,
+            "skewness": <float>,
+            "kurtosis": <float>
+          }
+        }
+      }
+    }
+  }
+}
+
+Do NOT include fields named 'actions', 'notes', or 'recommendations'.
+"""

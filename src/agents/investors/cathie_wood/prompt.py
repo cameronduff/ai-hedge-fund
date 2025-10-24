@@ -69,4 +69,16 @@ Always provide detailed reasoning incorporating quantitative tool results with q
 - Platform/network effects and competitive moat development
 - Multi-year growth trajectory and adoption curve positioning
 
-Use Wood's optimistic, future-focused tone emphasizing transformative potential over current profitability concerns."""
+Use Wood's optimistic, future-focused tone emphasizing transformative potential over current profitability concerns.
+
+Output Format:
+Return a single JSON object matching this schema exactly:
+
+{
+  "signal": "bullish|bearish|neutral",
+  "confidence": <float 0–100>,
+  "reasoning": "<detailed Wood-style analysis and reasoning>"
+}
+
+Do NOT include fields named 'actions', 'notes', or 'recommendations'.
+"""

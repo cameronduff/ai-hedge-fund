@@ -147,4 +147,89 @@ Provide comprehensive analysis including:
 4. **Investment Thesis**: Clear reasoning for buy/hold/sell recommendation
 5. **Risk Assessment**: Key factors that could impact valuation significantly
 
-Focus on delivering actionable insights that help inform investment decisions while maintaining intellectual honesty about valuation uncertainty and assumption sensitivity."""
+Focus on delivering actionable insights that help inform investment decisions while maintaining intellectual honesty about valuation uncertainty and assumption sensitivity.
+
+Output Format:
+Return a single JSON object matching this schema exactly:
+
+{
+  "valuation_analysis": {
+    "<TICKER>": {
+      "signal": "bullish|bearish|neutral",
+      "confidence": <float 0–100>,
+      "weighted_value_gap": <float>,
+      "intrinsic_value_estimate": <float>,
+      "dcf_analysis": {
+        "value": <float>,
+        "market_cap": <float>,
+        "value_gap": <float>,
+        "weight": <float>,
+        "signal": "bullish|bearish|neutral",
+        "confidence": <float 0–100>,
+        "details": "<explanation>",
+        "dcf_scenarios": {
+          "bear_case": <float>,
+          "base_case": <float>,
+          "bull_case": <float>,
+          "expected_value": <float>,
+          "wacc_used": <float>,
+          "terminal_growth": <float>,
+          "value_range": <float>
+        },
+        "fcf_quality_score": <float 0–100>,
+        "growth_sustainability": <float 0–100>
+      },
+      "owner_earnings_analysis": {
+        "value": <float>,
+        "market_cap": <float>,
+        "value_gap": <float>,
+        "weight": <float>,
+        "signal": "bullish|bearish|neutral",
+        "confidence": <float 0–100>,
+        "details": "<explanation>",
+        "owner_earnings": <float>,
+        "margin_of_safety": <float>,
+        "required_return": <float>,
+        "growth_assumptions": "<description>"
+      },
+      "ev_ebitda_analysis": {
+        "value": <float>,
+        "market_cap": <float>,
+        "value_gap": <float>,
+        "weight": <float>,
+        "signal": "bullish|bearish|neutral",
+        "confidence": <float 0–100>,
+        "details": "<explanation>",
+        "current_multiple": <float>,
+        "peer_median_multiple": <float>,
+        "multiple_premium_discount": <float>,
+        "ebitda_quality": "<assessment>"
+      },
+      "residual_income_analysis": {
+        "value": <float>,
+        "market_cap": <float>,
+        "value_gap": <float>,
+        "weight": <float>,
+        "signal": "bullish|bearish|neutral",
+        "confidence": <float 0–100>,
+        "details": "<explanation>",
+        "current_roe": <float>,
+        "cost_of_equity": <float>,
+        "book_value_growth": <float>,
+        "excess_return_sustainability": "<assessment>"
+      },
+      "key_value_drivers": ["<driver1>", "<driver2>"],
+      "risk_factors": ["<risk1>", "<risk2>"],
+      "catalysts": ["<catalyst1>", "<catalyst2>"],
+      "reasoning": "<comprehensive explanation>"
+    }
+  },
+  "summary": "<portfolio-level summary>",
+  "methodology_notes": "<methodological notes>",
+  "market_context": "<market context>",
+  "top_value_opportunities": ["<ticker1>", "<ticker2>"],
+  "valuation_concerns": ["<ticker1>", "<ticker2>"]
+}
+
+Do NOT include fields named 'actions', 'notes', or 'recommendations'.
+"""
