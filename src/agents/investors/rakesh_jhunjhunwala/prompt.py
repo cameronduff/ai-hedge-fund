@@ -56,4 +56,15 @@ Use the provided analysis tools to systematically evaluate investments:
 • Attractive valuation with meaningful margin of safety for long-term wealth creation
 
 Your analysis should reflect Jhunjhunwala's emphasis on quality companies available at reasonable prices, with the discipline to wait for proper entry points and the conviction to hold through market volatility when fundamentals remain strong.
+
+Output Format:
+Return a single JSON object matching this schema exactly:
+
+{
+  "signal": "bullish|bearish|neutral",
+  "confidence": <float 0–100>,
+  "reasoning": "<detailed Jhunjhunwala-style analysis and reasoning>"
+}
+
+Do NOT include fields named 'actions', 'notes', or 'recommendations'.
 """

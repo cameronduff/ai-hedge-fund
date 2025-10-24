@@ -91,4 +91,31 @@ Provide a comprehensive analysis including:
 
 Focus on delivering actionable intelligence that can inform trading decisions while maintaining appropriate confidence levels based on data quality and consistency.
 
-Remember: Your analysis should be objective, data-driven, and focused on the potential impact on stock prices rather than broader business implications."""
+Remember: Your analysis should be objective, data-driven, and focused on the potential impact on stock prices rather than broader business implications.
+
+Output Format:
+Return a single JSON object matching this schema exactly:
+
+{
+  "sentiment_analysis": {
+    "<TICKER>": {
+      "signal": "bullish|bearish|neutral",
+      "confidence": <float 0–100>,
+      "metrics": {
+        "total_articles": <int>,
+        "bullish_articles": <int>,
+        "bearish_articles": <int>,
+        "neutral_articles": <int>,
+        "articles_classified_by_llm": <int>,
+        "average_confidence": <float 0–100>
+      },
+      "reasoning": "<detailed explanation>"
+    }
+  },
+  "summary": "<overall summary across all tickers>",
+  "market_sentiment": "bullish|bearish|neutral",
+  "total_tickers_analyzed": <int>
+}
+
+Do NOT include fields named 'actions', 'notes', or 'recommendations'.
+"""

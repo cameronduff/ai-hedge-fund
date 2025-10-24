@@ -47,4 +47,47 @@ For each security, provide detailed analysis including:
 - Risk-adjusted position limits and remaining capacity
 - Clear reasoning for all risk adjustments and constraints
 
-Maintain conservative risk management principles while enabling appropriate capital allocation for investment opportunities."""
+Maintain conservative risk management principles while enabling appropriate capital allocation for investment opportunities.
+
+Output Format:
+Return a single JSON object matching this schema exactly:
+
+{
+  "risk_analysis": {
+    "<TICKER>": {
+      "remaining_position_limit": <float>,
+      "current_price": <float>,
+      "volatility_metrics": {
+        "daily_volatility": <float>,
+        "annualized_volatility": <float>,
+        "volatility_percentile": <float>,
+        "data_points": <int>
+      },
+      "correlation_metrics": {
+        "avg_correlation_with_active": <float|null>,
+        "max_correlation_with_active": <float|null>,
+        "top_correlated_tickers": [
+          {
+            "ticker": "<TICKER>",
+            "correlation": <float>
+          }
+        ]
+      },
+      "reasoning": {
+        "portfolio_value": <float>,
+        "current_position_value": <float>,
+        "base_position_limit_pct": <float>,
+        "correlation_multiplier": <float>,
+        "combined_position_limit_pct": <float>,
+        "position_limit": <float>,
+        "remaining_limit": <float>,
+        "available_cash": <float>,
+        "risk_adjustment": "<explanation>",
+        "error": "<error_message|null>"
+      }
+    }
+  }
+}
+
+Do NOT include fields named 'actions', 'notes', or 'recommendations'.
+"""
