@@ -1,11 +1,19 @@
 import asyncio
 import random
 import re
+import os
+import time
 from typing import AsyncGenerator, Optional, Literal
 
 from loguru import logger
 from pydantic import ConfigDict
-from google.adk.agents import BaseAgent, LlmAgent, SequentialAgent, ParallelAgent
+from google.adk.agents import (
+    BaseAgent,
+    LlmAgent,
+    SequentialAgent,
+    ParallelAgent,
+    LoopAgent,
+)
 from google.adk.agents.invocation_context import InvocationContext
 from google.adk.events import Event
 from google.genai import errors as genai_errors
@@ -22,6 +30,66 @@ def _sanitize_agent_id(name: str) -> str:
 
 def _content(msg: str) -> Content:
     return Content(parts=[Part(text=msg)])
+
+
+# ---------- global RPM limiter ----------
+class RPMLimiter:
+    """
+    Simple per-process RPM limiter (token spacing).
+    Ensures at most `rpm` starts per 60s by spacing calls ~60/rpm apart.
+    """
+
+    def __init__(self, rpm: int):
+        self.interval = 60.0 / max(int(rpm), 1)
+        self._lock = asyncio.Lock()
+        self._last = 0.0  # monotonic timestamp of last permit
+
+    async def wait(self) -> None:
+        async with self._lock:
+            now = time.monotonic()
+            sleep_for = max(0.0, self.interval - (now - self._last))
+            if sleep_for > 0:
+                await asyncio.sleep(sleep_for)
+            self._last = time.monotonic()
+
+
+# Configure global limiter from env; default 2 RPM to match Gemini free tier.
+_GLOBAL_LLM_RPM = int(os.getenv("GENAI_LLM_RPM", "2"))
+GLOBAL_LLM_RPM_LIMITER = RPMLimiter(rpm=_GLOBAL_LLM_RPM)
+
+
+def set_global_llm_rpm(rpm: int) -> None:
+    """Optional helper if you want to bump at runtime."""
+    global GLOBAL_LLM_RPM_LIMITER
+    GLOBAL_LLM_RPM_LIMITER = RPMLimiter(rpm=max(int(rpm), 1))
+    logger.info("[rate-limit] Global LLM RPM set to {}", rpm)
+
+
+# ---------- Rate-limited wrapper ----------
+class RateLimitedAgent(BaseAgent):
+    """
+    Wraps any BaseAgent and enforces a global RPM gate BEFORE each run attempt.
+    Place this INSIDE the RetryingAgent so every retry is also paced.
+    """
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    inner: BaseAgent
+    limiter: Optional[RPMLimiter] = None
+
+    async def _run_async_impl(
+        self, context: InvocationContext
+    ) -> AsyncGenerator[Event, None]:
+        limiter = self.limiter or GLOBAL_LLM_RPM_LIMITER
+        # Gate this attempt
+        await limiter.wait()
+        logger.debug(
+            "[{}] passed global RPM gate; invoking '{}'",
+            self.name,
+            getattr(self.inner, "name", type(self.inner).__name__),
+        )
+        async for ev in self.inner.run_async(context):
+            yield ev
 
 
 # ---------- Retrying wrapper ----------
@@ -209,38 +277,50 @@ class RetryingAgent(BaseAgent):
 # ---------- recursive wrapper ----------
 def wrap_llm_agents_with_retry(agent: BaseAgent, **retry_kwargs) -> BaseAgent:
     """
-    Recursively wrap LlmAgent leaves with RetryingAgent.
-    Return a (possibly) new tree; do not mutate names into invalid identifiers.
-    Adds debug logging to show wrapping decisions.
+    Recursively wrap LlmAgent leaves with:
+      RateLimitedAgent -> RetryingAgent(LlmAgent)
+    and descend into SequentialAgent, ParallelAgent, LoopAgent (and any container that
+    exposes a `sub_agents` list).
     """
     if isinstance(agent, LlmAgent):
         safe_inner_name = _sanitize_agent_id(
             getattr(agent, "name", agent.__class__.__name__)
         )
+        # Rate-limit the leaf first, then wrap with retry so each attempt is gated
+        rl_name = f"rpm_{safe_inner_name}"
+        rate_limited_leaf = RateLimitedAgent(inner=agent, name=rl_name)
+
         wrapper_name = f"retry_{safe_inner_name}"
         logger.debug(
-            "[wrap] wrapping LlmAgent '{}' -> '{}' with kwargs={} ",
+            "[wrap] wrapping LlmAgent '{}' -> RateLimitedAgent('{}') -> RetryingAgent('{}') with kwargs={}",
             safe_inner_name,
+            rl_name,
             wrapper_name,
             retry_kwargs,
         )
-        return RetryingAgent(inner=agent, name=wrapper_name, **retry_kwargs)
+        return RetryingAgent(inner=rate_limited_leaf, name=wrapper_name, **retry_kwargs)
 
-    if isinstance(agent, SequentialAgent):
+    # Known composite agent types
+    if isinstance(agent, (SequentialAgent, ParallelAgent, LoopAgent)):
+        agent_type = agent.__class__.__name__
         logger.debug(
-            "[wrap] descending into SequentialAgent '{}' ({} sub-agents)",
-            getattr(agent, "name", "sequential"),
-            len(agent.sub_agents),
+            "[wrap] descending into {} '{}' ({} sub-agents)",
+            agent_type,
+            getattr(agent, "name", agent_type.lower()),
+            len(getattr(agent, "sub_agents", [])),
         )
         agent.sub_agents = [
             wrap_llm_agents_with_retry(a, **retry_kwargs) for a in agent.sub_agents
         ]
         return agent
 
-    if isinstance(agent, ParallelAgent):
+    # Generic fallback for any custom container with `sub_agents`
+    if hasattr(agent, "sub_agents") and isinstance(agent.sub_agents, list):
+        agent_type = agent.__class__.__name__
         logger.debug(
-            "[wrap] descending into ParallelAgent '{}' ({} sub-agents)",
-            getattr(agent, "name", "parallel"),
+            "[wrap] descending into container {} '{}' ({} sub-agents)",
+            agent_type,
+            getattr(agent, "name", agent_type.lower()),
             len(agent.sub_agents),
         )
         agent.sub_agents = [

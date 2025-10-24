@@ -96,13 +96,19 @@ def get_pipeline() -> BaseAgent:
 
     pipeline_with_retry = wrap_llm_agents_with_retry(
         pipeline,
-        max_429_retries=10,  # single retry for 429; Vertex queues automatically
-        base_delay_429=1.0,  # minimal wait (s)
-        max_transient_retries=2,  # at most two transient retries (5xx/UNAVAILABLE)
-        base_delay_transient=1.0,  # smaller base delay
-        backoff=1.5,  # gentler exponential increase
-        max_delay=5.0,  # cap backoff at 10s (vs. 32s)
-        pt_overage_policy="allow_spillover",  # continue to allow spillover to PayGo
+        # --- 429 / rate limit handling ---
+        max_429_retries=2,  # only two total attempts; avoid thundering herds
+        base_delay_429=5.0,  # start with ~5s delay (Gemini RetryInfo often ~20–45s)
+        backoff=2.0,  # exponential backoff doubling each time
+        max_delay=90.0,  # allow waits up to ~1.5 min if RetryInfo missing
+        # --- transient server error (5xx / UNAVAILABLE) handling ---
+        max_transient_retries=4,  # tolerate a few 503 spikes from overloaded model
+        base_delay_transient=2.0,
+        max_transient_retries=4,
+        backoff=2.0,  # double wait each retry
+        max_delay_transient=60.0,  # cap transient retry waits at 1 minute
+        # --- Provisioned throughput policy ---
+        pt_overage_policy="allow_spillover",  # permit fallback to PayGo if enabled
     )
 
     return pipeline_with_retry
