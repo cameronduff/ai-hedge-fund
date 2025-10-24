@@ -47,6 +47,7 @@ def build_bill_ackman_agent() -> LlmAgent:
             temperature=0.2,  # Low temperature for disciplined, consistent analysis
         ),
         output_schema=BillAckmanSignal,
+        output_key="bill_ackman_agent_output",
     )
 
 

@@ -29,4 +29,5 @@ fundamentals_agent = LlmAgent(
         temperature=0.1,  # Very low temperature for precise fundamental analysis
     ),
     output_schema=FundamentalsAgentOutput,
+    output_key="fundamentals_agent_output",
 )

@@ -34,4 +34,5 @@ valuation_agent = LlmAgent(
         temperature=0.1,  # Low temperature for precise, data-driven valuation
     ),
     output_schema=ValuationAgentOutput,
+    output_key="valuation_agent_output",
 )

@@ -31,4 +31,5 @@ growth_agent = LlmAgent(
         temperature=0.3,  # Moderate temperature for balanced growth analysis
     ),
     output_schema=GrowthAgentOutput,
+    output_key="growth_agent_output",
 )

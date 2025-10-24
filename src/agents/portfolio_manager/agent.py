@@ -36,4 +36,5 @@ portfolio_manager_agent = LlmAgent(
         temperature=0.2,  # Low temperature for disciplined, systematic portfolio management
     ),
     output_schema=PortfolioManagerOutput,
+    output_key="portfolio_manager_output",
 )

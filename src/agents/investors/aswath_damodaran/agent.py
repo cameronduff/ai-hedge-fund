@@ -46,6 +46,7 @@ def build_aswath_damodaran_agent() -> LlmAgent:
             temperature=0.1,  # Low temperature for consistent analytical approach
         ),
         output_schema=AswathDamodaranSignal,
+        output_key="aswath_damodaran_agent_output",
     )
 
 

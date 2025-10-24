@@ -27,4 +27,5 @@ peter_lynch_agent = LlmAgent(
         temperature=0.3,  # Moderate temperature for Lynch's practical, intuitive approach
     ),
     output_schema=PeterLynchSignal,
+    output_key="peter_lynch_agent_output",
 )
