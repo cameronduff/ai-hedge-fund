@@ -28,4 +28,6 @@ warren_buffett_agent = LlmAgent(
     ),
     output_schema=WarrenBuffettSignal,
     output_key="warren_buffett_agent_output",
+    disallow_transfer_to_parent=True,
+    disallow_transfer_to_peers=True,
 )

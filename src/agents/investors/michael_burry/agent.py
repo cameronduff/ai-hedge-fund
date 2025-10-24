@@ -28,4 +28,6 @@ michael_burry_agent = LlmAgent(
     ),
     output_schema=MichaelBurrySignal,
     output_key="michael_burry_agent_output",
+    disallow_transfer_to_parent=True,
+    disallow_transfer_to_peers=True,
 )

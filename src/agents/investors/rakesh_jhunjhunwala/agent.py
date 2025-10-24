@@ -28,4 +28,6 @@ rakesh_jhunjhunwala_agent = LlmAgent(
     ),
     output_schema=RakeshJhunjhunwalaSignal,
     output_key="rakesh_jhunjhunwala_agent_output",
+    disallow_transfer_to_parent=True,
+    disallow_transfer_to_peers=True,
 )

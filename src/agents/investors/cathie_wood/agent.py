@@ -45,6 +45,8 @@ def build_cathie_wood_agent() -> LlmAgent:
         ),
         output_schema=CathieWoodSignal,
         output_key="cathie_wood_agent_output",
+        disallow_transfer_to_parent=True,
+        disallow_transfer_to_peers=True,
     )
 
 
