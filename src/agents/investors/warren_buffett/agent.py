@@ -27,4 +27,5 @@ warren_buffett_agent = LlmAgent(
         temperature=0.1,  # Very low temperature for Buffett's disciplined, analytical approach
     ),
     output_schema=WarrenBuffettSignal,
+    output_key="warren_buffett_agent_output",
 )

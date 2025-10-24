@@ -47,6 +47,7 @@ def build_charlie_munger_agent() -> LlmAgent:
             temperature=0.1,  # Very low temperature for rational, consistent analysis
         ),
         output_schema=CharlieMungerSignal,
+        output_key="charlie_munger_agent_output",
     )
 
 

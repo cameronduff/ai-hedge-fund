@@ -85,6 +85,7 @@ def get_pipeline() -> BaseAgent:
     )
 
     pipeline = LoopAgent(
+        name="ai_hedge_fund",
         sub_agents=[
             research,
             investors,

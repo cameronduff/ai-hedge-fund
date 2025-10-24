@@ -27,4 +27,5 @@ phil_fisher_agent = LlmAgent(
         temperature=0.2,  # Low temperature for Fisher's methodical, analytical approach
     ),
     output_schema=PhilFisherSignal,
+    output_key="phil_fisher_agent_output",
 )
