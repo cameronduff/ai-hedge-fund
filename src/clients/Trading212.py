@@ -65,7 +65,7 @@ class T212Client:
             "Authorization": f"Basic {token}",
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "User-Agent": "t212-agent-client/2.0",
+            "User-Agent": "t212-agent-client/2.1",
         }
 
     # -------------------------
@@ -73,34 +73,59 @@ class T212Client:
     # -------------------------
     def _req(self, method: str, path: str, **kwargs):
         url = path if path.startswith("http") else f"{self.base_url}{path}"
-        backoff = 1.0
-        for attempt in range(5):
+
+        for attempt in range(8):
             resp = requests.request(
                 method, url, headers=self._headers, timeout=self.timeout, **kwargs
             )
-            if resp.status_code == 429:
-                wait = min(60, backoff * (2**attempt)) + random.random()
-                print(
-                    f"⚠️ 429 Rate limited, retrying in {wait:.1f}s (attempt {attempt+1})"
-                )
-                time.sleep(wait)
-                continue
+
+            # Log key rate-limit headers
+            remaining = resp.headers.get("x-ratelimit-remaining")
+            reset = resp.headers.get("x-ratelimit-reset")
+            used = resp.headers.get("x-ratelimit-used")
+            logger.info(
+                f"[{resp.status_code}] {path} | Remaining={remaining} "
+                f"Reset={reset} Used={used}"
+            )
+
+            # Handle common error codes
             if resp.status_code == 401:
                 raise T212AuthError("Unauthorized — check API credentials")
             if resp.status_code == 403:
                 raise T212AuthError("Forbidden — missing scopes or IP not allowed")
+
+            # Handle rate limiting with precise sleep
+            if resp.status_code == 429:
+                now = int(time.time())
+                wait = None
+                if reset and reset.isdigit():
+                    reset_ts = int(reset)
+                    wait = max(0, reset_ts - now) + random.uniform(0.2, 0.6)
+                    logger.warning(
+                        f"⚠️ 429 Rate-limited; sleeping until reset ({wait:.1f}s)..."
+                    )
+                    time.sleep(wait)
+                    continue
+                # fallback exponential back-off if no reset header
+                wait = min(60, 2**attempt) + random.random()
+                logger.warning(
+                    f"⚠️ 429 Rate-limited (no reset header); retrying in {wait:.1f}s..."
+                )
+                time.sleep(wait)
+                continue
+
             if not resp.ok:
                 raise T212Error(f"HTTP {resp.status_code}: {resp.text[:200]}")
+
+            # Success
             try:
-                logger.info(
-                    f"[{resp.status_code}] {path} | Remaining={resp.headers.get('x-ratelimit-remaining')} "
-                    f"Reset={resp.headers.get('x-ratelimit-reset')} "
-                    f"Used={resp.headers.get('x-ratelimit-used')}"
-                )
                 return resp.json()
             except Exception:
                 return resp.text
-        raise T212RateLimitError("Repeated 429s from Trading 212")
+
+        raise T212RateLimitError(
+            "Repeated 429s from Trading 212 after multiple retries"
+        )
 
     # -------------------------
     # Basic endpoints
@@ -132,12 +157,10 @@ class T212Client:
         self,
         *,
         name: str,
-        instrument_shares: Dict[
-            str, float
-        ],  # e.g. {"AAPL_US_EQ": 0.5, "MSFT_US_EQ": 0.5}
-        goal: float,  # target total value in account currency
-        dividend_cash_action: str = "REINVEST",  # or "TO_ACCOUNT_CASH"
-        end_date: Optional[str] = None,  # ISO8601
+        instrument_shares: Dict[str, float],
+        goal: float,
+        dividend_cash_action: str = "REINVEST",
+        end_date: Optional[str] = None,
         icon: Optional[str] = None,
     ) -> dict:
         payload = {
@@ -153,10 +176,7 @@ class T212Client:
         return self._req("POST", "/equity/pies", json=payload)  # scope pies:write
 
     def pie_update(self, pie_id: int, **fields) -> dict:
-        # fields may include: name, goal, dividendCashAction, endDate, icon, instrumentShares
-        return self._req(
-            "POST", f"/equity/pies/{pie_id}", json=fields
-        )  # scope pies:write
+        return self._req("POST", f"/equity/pies/{pie_id}", json=fields)
 
     def pie_duplicate(
         self, pie_id: int, *, name: str, icon: Optional[str] = None
@@ -164,14 +184,12 @@ class T212Client:
         payload = {"name": name}
         if icon:
             payload["icon"] = icon
-        return self._req(
-            "POST", f"/equity/pies/{pie_id}/duplicate", json=payload
-        )  # pies:write
+        return self._req("POST", f"/equity/pies/{pie_id}/duplicate", json=payload)
 
     def pie_delete(self, pie_id: int) -> dict:
-        return self._req("DELETE", f"/equity/pies/{pie_id}")  # pies:write
+        return self._req("DELETE", f"/equity/pies/{pie_id}")
 
-    # --- Instruments metadata (helps research + symbol mapping) ---
+    # --- Instruments metadata ---
     def instruments(self, cursor: Optional[str] = None, limit: int = 200) -> dict:
         params = {"limit": limit}
         if cursor:
@@ -239,7 +257,7 @@ class AgentAPI:
             return {"action": "BUY", "reason": f"price <= {down}", "trade": trade}
         return {"action": "HOLD", "reason": "within band"}
 
-    # Pies
+    # --- Pies ---
     def list_pies(self) -> list:
         return self.broker.pies_list()
 
@@ -249,24 +267,20 @@ class AgentAPI:
     def update_pie_weights(
         self, pie_id: int, weights: Dict[str, float], **kwargs
     ) -> dict:
-        # Accept weights summing to anything; normalize to shares (0..1)
         total = sum(weights.values()) or 1.0
         instrument_shares = {t: w / total for t, w in weights.items()}
         fields = {"instrumentShares": instrument_shares}
-        fields.update(kwargs)  # name/goal/dividendCashAction/endDate/icon if you want
+        fields.update(kwargs)
         return self.broker.pie_update(pie_id, **fields)
 
     # --- Research helpers ---
     def search_instruments(
         self, query: str, max_pages: int = 3, page_size: int = 200
     ) -> List[dict]:
-        """Very simple client-side search of T212 instruments."""
         out, cursor = [], None
         for _ in range(max_pages):
             page = self.broker.instruments(cursor=cursor, limit=page_size)
-            items = (
-                page.get("items") or page.get("instruments") or page
-            )  # accommodate schema variations
+            items = page.get("items") or page.get("instruments") or page
             for it in items:
                 text = f"{it.get('ticker','')} {it.get('name','')} {it.get('isin','')}".lower()
                 if query.lower() in text:
@@ -276,19 +290,14 @@ class AgentAPI:
                 break
         return out
 
-    # --- Rebalancing (manual, via normal equity orders) ---
+    # --- Rebalancing ---
     def _to_simple_symbol(self, t212_ticker: str) -> Optional[str]:
-        # Naive mapping for US equities: "AAPL_US_EQ" -> "AAPL". You may want a proper map using metadata.
         parts = t212_ticker.split("_")
         return parts[0] if len(parts) >= 3 and parts[1] == "US" else None
 
     def plan_pie_rebalance(self, pie_id: int) -> Dict[str, Any]:
-        """Compute per-ticker qty deltas to move toward target weights using latest prices (Finnhub).
-        NOTE: This is an approximation and does not account for fees/min lot sizes/FX. LIVE will place Market orders only.
-        """
         pie = self.get_pie(pie_id)
         instruments = pie.get("instruments", [])
-        # Fall back to settings.instrumentShares if expectedShare is missing
         target_map = {
             i["ticker"]: i.get("expectedShare") for i in instruments if "ticker" in i
         }
@@ -296,16 +305,14 @@ class AgentAPI:
             settings = pie.get("settings", {})
             target_map = settings.get("instrumentShares", target_map)
 
-        # Fetch prices and compute current/target values
         rows, total_value = [], 0.0
         for i in instruments:
             t = i["ticker"]
             owned_qty = float(i.get("ownedQuantity", 0) or 0)
-            # map to a quote symbol (improve using instruments metadata in production)
             sym = self._to_simple_symbol(t)
             if not sym:
-                continue  # skip non-US for this naive example
-            q = self.quotes.get_quote(sym)  # {'price': ...}
+                continue
+            q = self.quotes.get_quote(sym)
             px = float(q["price"])
             cur_val = owned_qty * px
             rows.append(
@@ -320,10 +327,7 @@ class AgentAPI:
             total_value += cur_val
 
         if total_value <= 0:
-            return {
-                "status": "error",
-                "reason": "pie has zero value (or unsupported tickers for pricing)",
-            }
+            return {"status": "error", "reason": "pie has zero value"}
 
         plan = []
         for r in rows:
@@ -331,7 +335,6 @@ class AgentAPI:
             tgt_val = w_target * total_value
             tgt_qty = tgt_val / r["price"]
             delta_qty = tgt_qty - r["owned_qty"]
-            # skip tiny dust
             if abs(delta_qty) >= 0.001:
                 plan.append(
                     {
@@ -342,13 +345,11 @@ class AgentAPI:
                     }
                 )
 
-        # buys are positive qty; sells negative (T212 sells require negative quantity)
         return {"status": "ok", "pie_id": pie_id, "orders": plan}
 
     def execute_rebalance_plan(
         self, plan: Dict[str, Any], tif: str = "DAY"
     ) -> List[dict]:
-        """Turn the plan into actual market orders on each ticker."""
         if plan.get("status") != "ok":
             return []
         results = []
@@ -387,25 +388,12 @@ def get_agent() -> AgentAPI:
 # -----------------------------
 if __name__ == "__main__":
     agent = get_agent()
-
-    # Pies overview
     pies = agent.list_pies()
     print("== Pies ==")
     print(json.dumps(pies, indent=2))
 
-    # Pick a pie and inspect
     if pies:
         pie_id = pies[0]["id"]
         pie = agent.get_pie(pie_id)
         print(f"\n== Pie {pie_id} ==")
         print(json.dumps(pie, indent=2))
-
-        # Example: nudge weights toward 50/50 for two tickers (normalize automatically)
-        # agent.update_pie_weights(pie_id, {"AAPL_US_EQ": 50, "MSFT_US_EQ": 50})
-
-        # Plan and (optionally) execute a manual rebalance
-        # plan = agent.plan_pie_rebalance(pie_id)
-        # print("\n== Rebalance plan ==")
-        # print(json.dumps(plan, indent=2))
-        # trades = agent.execute_rebalance_plan(plan)
-        # print(json.dumps(trades, indent=2))
