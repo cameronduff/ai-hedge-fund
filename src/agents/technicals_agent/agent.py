@@ -36,4 +36,5 @@ technical_agent = LlmAgent(
         temperature=0.2,  # Low temperature for precise technical analysis
     ),
     output_schema=TechnicalAgentOutput,
+    output_key="technical_agent_output",
 )

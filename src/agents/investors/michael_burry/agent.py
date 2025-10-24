@@ -27,4 +27,5 @@ michael_burry_agent = LlmAgent(
         temperature=0.1,  # Low temperature for analytical precision like Burry
     ),
     output_schema=MichaelBurrySignal,
+    output_key="michael_burry_agent_output",
 )

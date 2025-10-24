@@ -33,4 +33,5 @@ sentiment_agent = LlmAgent(
         temperature=0.4,  # Higher temperature to capture nuanced sentiment
     ),
     output_schema=SentimentAgentOutput,
+    output_key="sentiment_agent_output",
 )

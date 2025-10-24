@@ -35,4 +35,5 @@ stanley_druckenmiller_agent = LlmAgent(
         temperature=0.1,  # Very low temperature for Druckenmiller's disciplined approach
     ),
     output_schema=StanleyDruckenmillerOutput,
+    output_key="stanley_druckenmiller_agent_output",
 )

@@ -44,6 +44,7 @@ def build_cathie_wood_agent() -> LlmAgent:
             temperature=0.4,  # Higher temperature for creative/optimistic innovation analysis
         ),
         output_schema=CathieWoodSignal,
+        output_key="cathie_wood_agent_output",
     )
 
 

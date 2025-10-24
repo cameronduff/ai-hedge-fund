@@ -27,4 +27,5 @@ risk_manager_agent = LlmAgent(
         temperature=0.1,  # Very low temperature for precise risk calculations
     ),
     output_schema=RiskManagerOutput,
+    output_key="risk_manager_output",
 )

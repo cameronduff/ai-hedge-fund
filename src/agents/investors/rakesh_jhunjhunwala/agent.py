@@ -27,4 +27,5 @@ rakesh_jhunjhunwala_agent = LlmAgent(
         temperature=0.1,  # Very low temperature for Jhunjhunwala's disciplined, analytical approach
     ),
     output_schema=RakeshJhunjhunwalaSignal,
+    output_key="rakesh_jhunjhunwala_agent_output",
 )
