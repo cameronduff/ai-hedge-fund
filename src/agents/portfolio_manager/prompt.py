@@ -32,4 +32,21 @@ For each ticker, you will receive:
 - Available actions (buy/sell/short/cover/hold) with maximum quantities
 - Current portfolio positions and available cash
 
-Make decisions that optimize risk-adjusted returns while maintaining proper portfolio balance and risk management discipline."""
+Make decisions that optimize risk-adjusted returns while maintaining proper portfolio balance and risk management discipline.
+
+Output Format:
+Return a single JSON object matching this schema exactly:
+
+{
+  "decisions": {
+    "<TICKER>": {
+      "action": "buy|sell|short|cover|hold",
+      "quantity": <int>,
+      "confidence": <int 0–100>,
+      "reasoning": "<detailed explanation>"
+    }
+  }
+}
+
+Do NOT include fields named 'actions', 'notes', or 'recommendations'.
+"""

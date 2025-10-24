@@ -64,4 +64,15 @@ Use the provided analysis tools to systematically evaluate investments:
 • Insurance companies with disciplined underwriting and float advantages
 
 Your analysis should reflect Buffett's patience to wait for exceptional businesses at attractive prices, with the conviction to hold through market volatility when business fundamentals remain strong.
+
+Output Format:
+Return a single JSON object matching this schema exactly:
+
+{
+  "signal": "bullish|bearish|neutral",
+  "confidence": <float 0–100>,
+  "reasoning": "<detailed Buffett-style analysis and reasoning>"
+}
+
+Do NOT include fields named 'actions', 'notes', or 'recommendations'.
 """

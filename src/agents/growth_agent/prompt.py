@@ -84,4 +84,60 @@ For each ticker, provide:
 - Overall growth signal with detailed supporting rationale
 - Confidence level reflecting analysis quality and signal strength
 
-Focus on identifying companies with sustainable competitive advantages, expanding addressable markets, and management teams executing on growth strategies effectively."""
+Focus on identifying companies with sustainable competitive advantages, expanding addressable markets, and management teams executing on growth strategies effectively.
+
+Output Format:
+Return a single JSON object matching this schema exactly:
+
+{
+  "analysis": {
+    "<TICKER>": {
+      "signal": "bullish|bearish|neutral",
+      "confidence": <float 0–100>,
+      "reasoning": {
+        "historical_growth": {
+          "score": <float 0–1>,
+          "revenue_growth": <float|null>,
+          "revenue_trend": <float>,
+          "eps_growth": <float|null>,
+          "eps_trend": <float>,
+          "fcf_growth": <float|null>,
+          "fcf_trend": <float>
+        },
+        "growth_valuation": {
+          "score": <float 0–1>,
+          "peg_ratio": <float|null>,
+          "price_to_sales_ratio": <float|null>
+        },
+        "margin_expansion": {
+          "score": <float 0–1>,
+          "gross_margin": <float|null>,
+          "gross_margin_trend": <float>,
+          "operating_margin": <float|null>,
+          "operating_margin_trend": <float>,
+          "net_margin": <float|null>,
+          "net_margin_trend": <float>
+        },
+        "insider_conviction": {
+          "score": <float 0–1>,
+          "net_flow_ratio": <float>,
+          "buys": <float>,
+          "sells": <float>
+        },
+        "financial_health": {
+          "score": <float 0–1>,
+          "debt_to_equity": <float|null>,
+          "current_ratio": <float|null>
+        },
+        "final_analysis": {
+          "signal": "bullish|bearish|neutral",
+          "confidence": <float 0–100>,
+          "weighted_score": <float 0–1>
+        }
+      }
+    }
+  }
+}
+
+Do NOT include fields named 'actions', 'notes', or 'recommendations'.
+"""
