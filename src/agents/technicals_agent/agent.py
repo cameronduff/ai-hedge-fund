@@ -37,4 +37,6 @@ technical_agent = LlmAgent(
     ),
     output_schema=TechnicalAgentOutput,
     output_key="technical_agent_output",
+    disallow_transfer_to_parent=True,
+    disallow_transfer_to_peers=True,
 )

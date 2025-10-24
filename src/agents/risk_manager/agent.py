@@ -28,4 +28,6 @@ risk_manager_agent = LlmAgent(
     ),
     output_schema=RiskManagerOutput,
     output_key="risk_manager_output",
+    disallow_transfer_to_parent=True,
+    disallow_transfer_to_peers=True,
 )

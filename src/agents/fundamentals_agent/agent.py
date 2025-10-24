@@ -30,4 +30,6 @@ fundamentals_agent = LlmAgent(
     ),
     output_schema=FundamentalsAgentOutput,
     output_key="fundamentals_agent_output",
+    disallow_transfer_to_parent=True,
+    disallow_transfer_to_peers=True,
 )

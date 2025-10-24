@@ -28,4 +28,6 @@ peter_lynch_agent = LlmAgent(
     ),
     output_schema=PeterLynchSignal,
     output_key="peter_lynch_agent_output",
+    disallow_transfer_to_parent=True,
+    disallow_transfer_to_peers=True,
 )

@@ -66,4 +66,25 @@ For each ticker, provide:
 - Confidence level reflecting signal strength and data quality
 - Actionable insights for investment decision-making
 
-Focus on identifying companies with strong competitive positions, sustainable business models, and attractive risk-adjusted return potential."""
+Focus on identifying companies with strong competitive positions, sustainable business models, and attractive risk-adjusted return potential.
+
+Output Format:
+Return a single JSON object matching this schema exactly:
+
+{
+  "analysis": {
+    "<TICKER>": {
+      "signal": "bullish|bearish|neutral",
+      "confidence": <float 0–100>,
+      "reasoning": {
+        "profitability_signal": {"signal": "...", "details": "..."},
+        "growth_signal": {"signal": "...", "details": "..."},
+        "financial_health_signal": {"signal": "...", "details": "..."},
+        "price_ratios_signal": {"signal": "...", "details": "..."}
+      }
+    }
+  }
+}
+
+Do NOT include fields named 'actions', 'notes', or 'recommendations'.
+"""
