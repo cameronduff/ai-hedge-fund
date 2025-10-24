@@ -20,6 +20,7 @@ from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 from dotenv import load_dotenv
 from src.clients.FinnhubClient import FinnhubQuoteProvider
+from loguru import logger
 import requests
 import base64
 
@@ -91,6 +92,11 @@ class T212Client:
             if not resp.ok:
                 raise T212Error(f"HTTP {resp.status_code}: {resp.text[:200]}")
             try:
+                logger.info(
+                    f"[{resp.status_code}] {path} | Remaining={resp.headers.get('x-ratelimit-remaining')} "
+                    f"Reset={resp.headers.get('x-ratelimit-reset')} "
+                    f"Used={resp.headers.get('x-ratelimit-used')}"
+                )
                 return resp.json()
             except Exception:
                 return resp.text

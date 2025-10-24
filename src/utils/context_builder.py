@@ -1,4 +1,5 @@
 # context_builder.py
+import time
 from typing import Any, Dict, List
 from datetime import datetime, timezone
 
@@ -51,29 +52,31 @@ def build_account_context(agent, *, top_n_positions: int = 40) -> Dict[str, Any]
     }
 
 
-def build_pies_context(agent, *, include_plans: bool = True) -> Dict[str, Any]:
+def build_pies_context(agent, include_plans=True):
     pies = agent.list_pies()
-    pie_details = []
-    plans = {}
+    pie_details, plans = [], {}
+    for i, p in enumerate(pies):
+        # Use data from list if sufficient
+        d = _compact_pie(p if "instruments" in p else agent.get_pie(p["id"]))
+        pie_details.append(d)
 
-    for p in pies:
-        d = agent.get_pie(p["id"])
-        pie_details.append(_compact_pie(d))
         if include_plans:
-            plan = agent.plan_pie_rebalance(p["id"])
-            if plan.get("status") == "ok":
-                orders = [
-                    {
-                        "ticker": o["ticker"],
-                        "delta_qty": o["delta_qty"],
-                        "price": o["price"],
-                    }
-                    for o in plan["orders"]
-                ]
-                plans[p["id"]] = {"orders": orders}
+            try:
+                plan = agent.plan_pie_rebalance(p["id"])
+                if plan.get("status") == "ok":
+                    orders = [
+                        {
+                            "ticker": o["ticker"],
+                            "delta_qty": o["delta_qty"],
+                            "price": o["price"],
+                        }
+                        for o in plan["orders"]
+                    ]
+                    plans[p["id"]] = {"orders": orders}
+            except Exception as e:
+                print(f"Plan for pie {p['id']} failed: {e}")
 
-    return {
-        "schema_version": "1.0",
-        "pies": pie_details,
-        "rebalance_plans": plans if include_plans else {},
-    }
+        # throttle to avoid 429s
+        if i < len(pies) - 1:
+            time.sleep(31)  # or dynamically based on x-ratelimit-reset
+    return {"schema_version": "1.0", "pies": pie_details, "rebalance_plans": plans}
