@@ -47,6 +47,8 @@ def build_aswath_damodaran_agent() -> LlmAgent:
         ),
         output_schema=AswathDamodaranSignal,
         output_key="aswath_damodaran_agent_output",
+        disallow_transfer_to_parent=True,
+        disallow_transfer_to_peers=True,
     )
 
 

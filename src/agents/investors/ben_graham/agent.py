@@ -45,6 +45,8 @@ def build_ben_graham_agent() -> LlmAgent:
         ),
         output_schema=BenGrahamSignal,
         output_key="ben_graham_agent_output",
+        disallow_transfer_to_parent=True,
+        disallow_transfer_to_peers=True,
     )
 
 

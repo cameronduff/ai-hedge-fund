@@ -28,4 +28,6 @@ phil_fisher_agent = LlmAgent(
     ),
     output_schema=PhilFisherSignal,
     output_key="phil_fisher_agent_output",
+    disallow_transfer_to_parent=True,
+    disallow_transfer_to_peers=True,
 )

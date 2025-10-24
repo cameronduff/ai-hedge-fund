@@ -37,4 +37,6 @@ portfolio_manager_agent = LlmAgent(
     ),
     output_schema=PortfolioManagerOutput,
     output_key="portfolio_manager_output",
+    disallow_transfer_to_parent=True,
+    disallow_transfer_to_peers=True,
 )

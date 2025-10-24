@@ -104,9 +104,6 @@ def get_pipeline() -> BaseAgent:
         # --- transient server error (5xx / UNAVAILABLE) handling ---
         max_transient_retries=4,  # tolerate a few 503 spikes from overloaded model
         base_delay_transient=2.0,
-        max_transient_retries=4,
-        backoff=2.0,  # double wait each retry
-        max_delay_transient=60.0,  # cap transient retry waits at 1 minute
         # --- Provisioned throughput policy ---
         pt_overage_policy="allow_spillover",  # permit fallback to PayGo if enabled
     )

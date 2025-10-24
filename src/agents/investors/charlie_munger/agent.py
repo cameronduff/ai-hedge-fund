@@ -48,6 +48,8 @@ def build_charlie_munger_agent() -> LlmAgent:
         ),
         output_schema=CharlieMungerSignal,
         output_key="charlie_munger_agent_output",
+        disallow_transfer_to_parent=True,
+        disallow_transfer_to_peers=True,
     )
 
 

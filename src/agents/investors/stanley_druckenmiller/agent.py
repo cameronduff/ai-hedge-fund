@@ -36,4 +36,6 @@ stanley_druckenmiller_agent = LlmAgent(
     ),
     output_schema=StanleyDruckenmillerOutput,
     output_key="stanley_druckenmiller_agent_output",
+    disallow_transfer_to_parent=True,
+    disallow_transfer_to_peers=True,
 )
