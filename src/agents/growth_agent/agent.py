@@ -1,6 +1,9 @@
+import os
+
 from google.adk.agents import LlmAgent
 from google.adk.tools import google_search
 from google.genai import types
+from google.adk.models.lite_llm import LiteLlm
 
 from src.agents.growth_agent.prompt import GROWTH_AGENT_PROMPT
 from src.agents.growth_agent.schema import GrowthAgentOutput
@@ -13,9 +16,11 @@ from src.tools.growth_analysis import (
     assess_financial_stability,
 )
 
+DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+
 # Growth Agent with tools for analyzing growth drivers and projecting future performance
 growth_agent = LlmAgent(
-    model="gemini-2.5-pro",
+    model=f"azure/{DEPLOYMENT}",
     name="growth_agent",
     instruction=GROWTH_AGENT_PROMPT,
     tools=[
