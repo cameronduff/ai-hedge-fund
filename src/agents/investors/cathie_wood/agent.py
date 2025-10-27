@@ -1,5 +1,8 @@
+import os
+
 from google.adk.agents import LlmAgent
 from google.genai import types
+from google.adk.models.lite_llm import LiteLlm
 from loguru import logger
 from dotenv import load_dotenv
 
@@ -13,6 +16,8 @@ from src.tools.cathie_wood_analysis import (
 )
 
 load_dotenv()
+
+DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
 
 
 def build_cathie_wood_agent() -> LlmAgent:
@@ -31,7 +36,7 @@ def build_cathie_wood_agent() -> LlmAgent:
     """
 
     return LlmAgent(
-        model="gemini-2.5-pro",  # Use newer model for innovation-focused analysis
+        model=f"azure/{DEPLOYMENT}",
         name="cathie_wood_agent",
         instruction=CATHIE_WOOD_PROMPT,
         tools=[

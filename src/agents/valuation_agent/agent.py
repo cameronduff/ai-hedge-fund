@@ -1,6 +1,9 @@
+import os
+
 from google.adk.agents import LlmAgent
 from google.adk.tools import google_search
 from google.genai import types
+from google.adk.models.lite_llm import LiteLlm
 
 from dotenv import load_dotenv
 
@@ -16,10 +19,11 @@ from src.tools.valuation_analysis import (
 
 load_dotenv()
 
+DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
 
 # Valuation Agent with a variety of valuation model tools
 valuation_agent = LlmAgent(
-    model="gemini-2.5-pro",
+    model=f"azure/{DEPLOYMENT}",
     name="valuation_agent",
     instruction=VALUATION_AGENT_PROMPT,
     tools=[

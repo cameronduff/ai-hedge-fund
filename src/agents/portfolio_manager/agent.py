@@ -1,6 +1,9 @@
+import os
+
 from google.adk.agents import LlmAgent
 from google.adk.tools import ToolContext
 from google.genai import types
+from google.adk.models.lite_llm import LiteLlm
 
 from src.agents.portfolio_manager.prompt import PORTFOLIO_MANAGER_PROMPT
 from src.agents.portfolio_manager.schema import PortfolioManagerOutput
@@ -20,9 +23,11 @@ def exit_loop(tool_context: ToolContext):
     return {}
 
 
+DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+
 # Portfolio Manager Agent with advanced portfolio management and risk assessment tools
 portfolio_manager_agent = LlmAgent(
-    model="gemini-2.5-pro",
+    model=f"azure/{DEPLOYMENT}",
     name="portfolio_manager_agent",
     instruction=PORTFOLIO_MANAGER_PROMPT,
     tools=[

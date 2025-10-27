@@ -1,5 +1,8 @@
+import os
+
 from google.adk.agents import LlmAgent
 from google.genai import types
+from google.adk.models.lite_llm import LiteLlm
 
 from src.agents.risk_manager.prompt import RISK_MANAGER_PROMPT
 from src.agents.risk_manager.schema import RiskManagerOutput
@@ -11,9 +14,11 @@ from src.tools.risk_analysis import (
     assess_portfolio_risk_concentration,
 )
 
+DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+
 # Risk Manager Agent with comprehensive risk analysis and position sizing tools
 risk_manager_agent = LlmAgent(
-    model="gemini-2.5-pro",
+    model=f"azure/{DEPLOYMENT}",
     name="risk_manager_agent",
     instruction=RISK_MANAGER_PROMPT,
     tools=[

@@ -1,5 +1,8 @@
+import os
+
 from google.adk.agents import LlmAgent
 from google.genai import types
+from google.adk.models.lite_llm import LiteLlm
 
 from dotenv import load_dotenv
 
@@ -17,6 +20,7 @@ from src.tools.druckenmiller_analysis import (
 
 load_dotenv()
 
+DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
 
 tools = [
     analyze_growth_momentum,
@@ -27,7 +31,7 @@ tools = [
 ]
 
 stanley_druckenmiller_agent = LlmAgent(
-    model="gemini-2.5-pro",
+    model=f"azure/{DEPLOYMENT}",
     name="stanley_druckenmiller_investment_agent",
     instruction=STANLEY_DRUCKENMILLER_PROMPT,
     tools=tools,

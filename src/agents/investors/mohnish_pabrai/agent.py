@@ -1,5 +1,8 @@
+import os
+
 from google.adk.agents import LlmAgent
 from google.genai import types
+from google.adk.models.lite_llm import LiteLlm
 
 from src.agents.investors.mohnish_pabrai.prompt import MOHNISH_PABRAI_PROMPT
 from src.agents.investors.mohnish_pabrai.schema import MohnishPabraiSignal
@@ -11,9 +14,11 @@ from src.tools.pabrai_analysis import (
     calculate_pabrai_score,
 )
 
+DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+
 # Mohnish Pabrai Agent with "heads I win, tails I don't lose much" analysis tools
 mohnish_pabrai_agent = LlmAgent(
-    model="gemini-2.5-pro",
+    model=f"azure/{DEPLOYMENT}",
     name="mohnish_pabrai_agent",
     instruction=MOHNISH_PABRAI_PROMPT,
     tools=[

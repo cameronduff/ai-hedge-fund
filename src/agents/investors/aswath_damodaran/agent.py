@@ -1,5 +1,8 @@
+import os
+
 from google.adk.agents import LlmAgent
 from google.genai import types
+from google.adk.models.lite_llm import LiteLlm
 from loguru import logger
 from dotenv import load_dotenv
 
@@ -14,6 +17,8 @@ from src.tools.damodaran_analysis import (
 )
 
 load_dotenv()
+
+DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
 
 
 def build_aswath_damodaran_agent() -> LlmAgent:
@@ -32,7 +37,7 @@ def build_aswath_damodaran_agent() -> LlmAgent:
     """
 
     return LlmAgent(
-        model="gemini-2.5-flash",
+        model=f"azure/{DEPLOYMENT}",
         name="aswath_damodaran_agent",
         instruction=ASWATH_DAMODARAN_PROMPT,
         tools=[

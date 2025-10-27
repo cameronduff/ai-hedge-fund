@@ -16,8 +16,11 @@ from google.adk.agents import (
 )
 from google.adk.agents.invocation_context import InvocationContext
 from google.adk.events import Event
+from google.adk.models.lite_llm import LiteLlm
 from google.genai import errors as genai_errors
 from google.genai.types import Content, Part
+
+DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
 
 
 # ---------- utilities ----------

@@ -1,6 +1,9 @@
+import os
+
 from google.adk.agents import LlmAgent
 from google.adk.tools import google_search
 from google.genai import types
+from google.adk.models.lite_llm import LiteLlm
 
 from src.agents.fundamentals_agent.prompt import FUNDAMENTALS_AGENT_PROMPT
 from src.agents.fundamentals_agent.schema import FundamentalsAgentOutput
@@ -12,9 +15,11 @@ from src.tools.fundamental_analysis import (
     calculate_fundamental_score,
 )
 
+DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+
 # Fundamentals Agent with comprehensive financial analysis tools
 fundamentals_agent = LlmAgent(
-    model="gemini-2.5-pro",
+    model=f"azure/{DEPLOYMENT}",
     name="fundamentals_agent",
     instruction=FUNDAMENTALS_AGENT_PROMPT,
     tools=[

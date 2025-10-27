@@ -1,5 +1,8 @@
+import os
+
 from google.adk.agents import LlmAgent
 from google.genai import types
+from google.adk.models.lite_llm import LiteLlm
 
 from src.agents.investors.peter_lynch.prompt import PETER_LYNCH_PROMPT
 from src.agents.investors.peter_lynch.schema import PeterLynchSignal
@@ -11,9 +14,11 @@ from src.tools.lynch_analysis import (
     calculate_lynch_score,
 )
 
+DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+
 # Peter Lynch Agent with Growth at Reasonable Price (GARP) analysis tools
 peter_lynch_agent = LlmAgent(
-    model="gemini-2.5-pro",
+    model=f"azure/{DEPLOYMENT}",
     name="peter_lynch_agent",
     instruction=PETER_LYNCH_PROMPT,
     tools=[
