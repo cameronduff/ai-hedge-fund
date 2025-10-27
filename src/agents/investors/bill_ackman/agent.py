@@ -1,5 +1,8 @@
+import os
+
 from google.adk.agents import LlmAgent
 from google.genai import types
+from google.adk.models.lite_llm import LiteLlm
 from loguru import logger
 from dotenv import load_dotenv
 
@@ -14,6 +17,8 @@ from src.tools.ackman_analysis import (
 )
 
 load_dotenv()
+
+DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
 
 
 def build_bill_ackman_agent() -> LlmAgent:
@@ -33,7 +38,7 @@ def build_bill_ackman_agent() -> LlmAgent:
     """
 
     return LlmAgent(
-        model="gemini-2.5-pro",
+        model=f"azure/{DEPLOYMENT}",
         name="bill_ackman_agent",
         instruction=BILL_ACKMAN_PROMPT,
         tools=[

@@ -1,6 +1,9 @@
+import os
+
 from google.adk.agents import LlmAgent
 from google.adk.tools import google_search
 from google.genai import types
+from google.adk.models.lite_llm import LiteLlm
 
 from dotenv import load_dotenv
 
@@ -16,9 +19,11 @@ from src.tools.sentiment_analysis import (
 
 load_dotenv()
 
+DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+
 # Sentiment Agent with tools for analyzing market sentiment from various sources
 sentiment_agent = LlmAgent(
-    model="gemini-2.5-pro",
+    model=f"azure/{DEPLOYMENT}",
     name="sentiment_agent",
     instruction=SENTIMENT_AGENT_PROMPT,
     tools=[

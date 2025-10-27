@@ -1,5 +1,8 @@
+import os
+
 from google.adk.agents import LlmAgent
 from google.genai import types
+from google.adk.models.lite_llm import LiteLlm
 
 from src.agents.investors.rakesh_jhunjhunwala.prompt import RAKESH_JHUNJHUNWALA_PROMPT
 from src.agents.investors.rakesh_jhunjhunwala.schema import RakeshJhunjhunwalaSignal
@@ -11,9 +14,11 @@ from src.tools.jhunjhunwala_analysis import (
     calculate_jhunjhunwala_score,
 )
 
+DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+
 # Rakesh Jhunjhunwala Agent with quality-focused value with growth analysis tools
 rakesh_jhunjhunwala_agent = LlmAgent(
-    model="gemini-2.5-pro",
+    model=f"azure/{DEPLOYMENT}",
     name="rakesh_jhunjhunwala_agent",
     instruction=RAKESH_JHUNJHUNWALA_PROMPT,
     tools=[
