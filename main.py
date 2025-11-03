@@ -3,8 +3,10 @@ Main execution script for the AI Hedge Fund pipeline.
 Runs the complete analysis pipeline and saves results to output directory.
 """
 
+import asyncio
 import json
 import os
+import warnings
 from datetime import datetime
 from pathlib import Path
 from loguru import logger
@@ -13,6 +15,10 @@ from src.pipeline import get_pipeline
 from src.runner import run_pipeline
 from src.clients.Trading212 import get_agent
 from src.utils.context_builder import build_account_context, build_pies_context
+
+# Suppress aiohttp unclosed session warnings
+warnings.filterwarnings("ignore", message="Unclosed client session")
+warnings.filterwarnings("ignore", message="Unclosed connector")
 
 
 def ensure_output_dir() -> Path:
@@ -188,6 +194,18 @@ def main():
         error_file = save_results(error_result, output_dir, prefix="pipeline_error")
         logger.error(f"Error details saved to: {error_file}")
         raise
+
+    finally:
+        # Clean up any remaining async tasks and close sessions
+        try:
+            # Give a moment for cleanup
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                pending = asyncio.all_tasks(loop)
+                for task in pending:
+                    task.cancel()
+        except Exception:
+            pass  # Ignore cleanup errors
 
 
 if __name__ == "__main__":
