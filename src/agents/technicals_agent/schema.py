@@ -77,6 +77,6 @@ class TechnicalAnalysis(BaseModel):
 class TechnicalAgentOutput(BaseModel):
     """Output from Technical Agent's comprehensive technical analysis."""
 
-    analysis: Dict[str, TechnicalAnalysis] = Field(
-        description="Technical analysis for each ticker"
+    analysis: Dict[str, Optional[TechnicalAnalysis]] = Field(
+        description="Technical analysis for each ticker (None if analysis could not be completed)"
     )

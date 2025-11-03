@@ -34,7 +34,7 @@ mohnish_pabrai_agent = LlmAgent(
         calculate_pabrai_score,
     ],
     generate_content_config=types.GenerateContentConfig(
-        temperature=0.2,  # Low temperature for systematic, checklist-driven approach
+        temperature=1.0,  # Low temperature for systematic, checklist-driven approach
     ),
     output_schema=MohnishPabraiSignal,
     output_key="mohnish_pabrai_agent_output",

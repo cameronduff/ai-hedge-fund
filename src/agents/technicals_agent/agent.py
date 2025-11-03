@@ -3,7 +3,6 @@ import os
 from google.adk.agents import LlmAgent
 from google.adk.tools import google_search
 from google.genai import types
-from google.adk.models.lite_llm import LiteLlm, LiteLLMClient
 
 from dotenv import load_dotenv
 
@@ -17,19 +16,16 @@ from src.tools.technical_analysis import (
     calculate_statistical_indicators,
     combine_technical_signals,
 )
+from src.utils.model_selector import select_model
 
 load_dotenv()
 
-DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+# Force Gemini for this agent to enable google_search tool
+selected_model = select_model(model_preference="gemini")
 
-# 1) one-time setup
-# model must be your Azure *deployment name*, prefixed with 'azure/'
-azure_llm = LiteLlm(model=f"azure/{DEPLOYMENT}", llm_client=LiteLLMClient())
-
-# 2) use it in your agents
 # Technicals Agent with a suite of technical analysis tools
 technical_agent = LlmAgent(
-    model=azure_llm,  # pass the instance, not a string
+    model=selected_model,
     name="technical_agent",
     instruction=TECHNICAL_AGENT_PROMPT,
     tools=[
@@ -42,7 +38,7 @@ technical_agent = LlmAgent(
         combine_technical_signals,
     ],
     generate_content_config=types.GenerateContentConfig(
-        temperature=0.2,  # Low temperature for precise technical analysis
+        temperature=0.0,  # Very low temperature for precise technical analysis
     ),
     output_schema=TechnicalAgentOutput,
     output_key="technical_agent_output",

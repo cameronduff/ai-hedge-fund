@@ -3,7 +3,6 @@ import os
 from google.adk.agents import LlmAgent
 from google.adk.tools import google_search
 from google.genai import types
-from google.adk.models.lite_llm import LiteLlm, LiteLLMClient
 
 from dotenv import load_dotenv
 
@@ -16,19 +15,16 @@ from src.tools.sentiment_analysis import (
     generate_sentiment_signal,
     assess_market_sentiment,
 )
+from src.utils.model_selector import select_model
 
 load_dotenv()
 
-DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+# Force Gemini for this agent to enable google_search tool
+selected_model = select_model(model_preference="gemini")
 
-# 1) one-time setup
-# model must be your Azure *deployment name*, prefixed with 'azure/'
-azure_llm = LiteLlm(model=f"azure/{DEPLOYMENT}", llm_client=LiteLLMClient())
-
-# 2) use it in your agents
 # Sentiment Agent with tools for analyzing market sentiment from various sources
 sentiment_agent = LlmAgent(
-    model=azure_llm,  # pass the instance, not a string
+    model=selected_model,
     name="sentiment_agent",
     instruction=SENTIMENT_AGENT_PROMPT,
     tools=[
@@ -40,7 +36,7 @@ sentiment_agent = LlmAgent(
         assess_market_sentiment,
     ],
     generate_content_config=types.GenerateContentConfig(
-        temperature=0.4,  # Higher temperature to capture nuanced sentiment
+        temperature=0.3,  # Moderate temperature to capture nuanced sentiment
     ),
     output_schema=SentimentAgentOutput,
     output_key="sentiment_agent_output",

@@ -123,8 +123,8 @@ class ValuationAnalysis(BaseModel):
 class ValuationAgentOutput(BaseModel):
     """Output schema for valuation analysis agent"""
 
-    valuation_analysis: Dict[str, ValuationAnalysis] = Field(
-        description="Comprehensive valuation analysis results for each ticker"
+    valuation_analysis: Dict[str, Optional[ValuationAnalysis]] = Field(
+        description="Comprehensive valuation analysis results for each ticker (None if analysis could not be completed)"
     )
     summary: str = Field(description="Portfolio-level valuation summary and insights")
     methodology_notes: str = Field(

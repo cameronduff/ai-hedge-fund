@@ -50,7 +50,7 @@ def build_cathie_wood_agent() -> LlmAgent:
             calculate_cathie_wood_score,
         ],
         generate_content_config=types.GenerateContentConfig(
-            temperature=0.4,  # Higher temperature for creative/optimistic innovation analysis
+            temperature=1.0,  # Higher temperature for creative/optimistic innovation analysis
         ),
         output_schema=CathieWoodSignal,
         output_key="cathie_wood_agent_output",
