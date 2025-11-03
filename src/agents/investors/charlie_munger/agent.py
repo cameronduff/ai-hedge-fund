@@ -2,7 +2,7 @@ import os
 
 from google.adk.agents import LlmAgent
 from google.genai import types
-from google.adk.models.lite_llm import LiteLlm
+from google.adk.models.lite_llm import LiteLlm, LiteLLMClient
 from loguru import logger
 from dotenv import load_dotenv
 
@@ -19,6 +19,10 @@ from src.tools.munger_analysis import (
 load_dotenv()
 
 DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+
+# 1) one-time setup
+# model must be your Azure *deployment name*, prefixed with 'azure/'
+azure_llm = LiteLlm(model=f"azure/{DEPLOYMENT}", llm_client=LiteLLMClient())
 
 
 def build_charlie_munger_agent() -> LlmAgent:
@@ -38,7 +42,7 @@ def build_charlie_munger_agent() -> LlmAgent:
     """
 
     return LlmAgent(
-        model=f"azure/{DEPLOYMENT}",
+        model=azure_llm,  # pass the instance, not a string
         name="charlie_munger_agent",
         instruction=CHARLIE_MUNGER_PROMPT,
         tools=[
@@ -49,7 +53,7 @@ def build_charlie_munger_agent() -> LlmAgent:
             calculate_munger_score,
         ],
         generate_content_config=types.GenerateContentConfig(
-            temperature=0.1,  # Very low temperature for rational, consistent analysis
+            temperature=1.0,  # Very low temperature for rational, consistent analysis
         ),
         output_schema=CharlieMungerSignal,
         output_key="charlie_munger_agent_output",
