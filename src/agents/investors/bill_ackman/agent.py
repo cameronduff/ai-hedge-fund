@@ -53,7 +53,7 @@ def build_bill_ackman_agent() -> LlmAgent:
             calculate_ackman_score,
         ],
         generate_content_config=types.GenerateContentConfig(
-            temperature=0.2,  # Low temperature for disciplined, consistent analysis
+            temperature=1.0,  # Low temperature for disciplined, consistent analysis
         ),
         output_schema=BillAckmanSignal,
         output_key="bill_ackman_agent_output",

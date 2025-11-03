@@ -3,7 +3,6 @@ import os
 from google.adk.agents import LlmAgent
 from google.adk.tools import google_search
 from google.genai import types
-from google.adk.models.lite_llm import LiteLlm, LiteLLMClient
 
 from src.agents.fundamentals_agent.prompt import FUNDAMENTALS_AGENT_PROMPT
 from src.agents.fundamentals_agent.schema import FundamentalsAgentOutput
@@ -14,21 +13,19 @@ from src.tools.fundamental_analysis import (
     analyze_valuation_ratios,
     calculate_fundamental_score,
 )
+from src.utils.model_selector import select_model
 
-DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+# Automatically select the appropriate model based on available API credentials
+# You can override by setting MODEL_PREFERENCE env var to "azure", "openai", or "gemini"
+model_preference = os.getenv("MODEL_PREFERENCE")
+selected_model = select_model(model_preference=model_preference)
 
-# 1) one-time setup
-# model must be your Azure *deployment name*, prefixed with 'azure/'
-azure_llm = LiteLlm(model=f"azure/{DEPLOYMENT}", llm_client=LiteLLMClient())
-
-# 2) use it in your agents
 # Fundamentals Agent with comprehensive financial analysis tools
 fundamentals_agent = LlmAgent(
-    model=azure_llm,  # pass the instance directly
+    model=selected_model,
     name="fundamentals_agent",
     instruction=FUNDAMENTALS_AGENT_PROMPT,
     tools=[
-        # Remove google_search for testing - it may be causing issues
         analyze_profitability_metrics,
         analyze_growth_metrics,
         analyze_financial_health,
@@ -36,7 +33,7 @@ fundamentals_agent = LlmAgent(
         calculate_fundamental_score,
     ],
     generate_content_config=types.GenerateContentConfig(
-        temperature=1.0,  # Very low temperature for precise fundamental analysis
+        temperature=0.1,  # Very low temperature for precise fundamental analysis
     ),
     output_schema=FundamentalsAgentOutput,
     output_key="fundamentals_agent_output",

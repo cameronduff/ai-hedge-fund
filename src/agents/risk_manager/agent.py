@@ -2,7 +2,6 @@ import os
 
 from google.adk.agents import LlmAgent
 from google.genai import types
-from google.adk.models.lite_llm import LiteLlm, LiteLLMClient
 
 from src.agents.risk_manager.prompt import RISK_MANAGER_PROMPT
 from src.agents.risk_manager.schema import RiskManagerOutput
@@ -13,17 +12,15 @@ from src.tools.risk_analysis import (
     calculate_position_limits,
     assess_portfolio_risk_concentration,
 )
+from src.utils.model_selector import select_model
 
-DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+# Automatically select the appropriate model
+model_preference = os.getenv("MODEL_PREFERENCE")
+selected_model = select_model(model_preference=model_preference)
 
-# 1) one-time setup
-# model must be your Azure *deployment name*, prefixed with 'azure/'
-azure_llm = LiteLlm(model=f"azure/{DEPLOYMENT}", llm_client=LiteLLMClient())
-
-# 2) use it in your agents
 # Risk Manager Agent with comprehensive risk analysis and position sizing tools
 risk_manager_agent = LlmAgent(
-    model=azure_llm,  # pass the instance, not a string
+    model=selected_model,
     name="risk_manager_agent",
     instruction=RISK_MANAGER_PROMPT,
     tools=[
@@ -34,7 +31,7 @@ risk_manager_agent = LlmAgent(
         assess_portfolio_risk_concentration,
     ],
     generate_content_config=types.GenerateContentConfig(
-        temperature=1.0,  # Very low temperature for precise risk calculations
+        temperature=0.0,  # Very low temperature for precise risk calculations
     ),
     output_schema=RiskManagerOutput,
     output_key="risk_manager_output",

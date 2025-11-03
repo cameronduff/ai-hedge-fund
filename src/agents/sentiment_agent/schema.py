@@ -31,8 +31,8 @@ class SentimentAnalysis(BaseModel):
 class SentimentAgentOutput(BaseModel):
     """Output schema for sentiment analysis agent"""
 
-    sentiment_analysis: Dict[str, SentimentAnalysis] = Field(
-        description="Sentiment analysis results for each ticker"
+    sentiment_analysis: Dict[str, Optional[SentimentAnalysis]] = Field(
+        description="Sentiment analysis results for each ticker (None if analysis could not be completed)"
     )
     summary: str = Field(
         description="Overall summary of sentiment analysis across all tickers"

@@ -50,7 +50,7 @@ def build_ben_graham_agent() -> LlmAgent:
             calculate_graham_score,
         ],
         generate_content_config=types.GenerateContentConfig(
-            temperature=0.2,  # Low temperature for conservative, consistent analysis
+            temperature=1.0,  # Low temperature for conservative, consistent analysis
         ),
         output_schema=BenGrahamSignal,
         output_key="ben_graham_agent_output",

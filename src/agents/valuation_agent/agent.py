@@ -3,7 +3,6 @@ import os
 from google.adk.agents import LlmAgent
 from google.adk.tools import google_search
 from google.genai import types
-from google.adk.models.lite_llm import LiteLlm, LiteLLMClient
 
 from dotenv import load_dotenv
 
@@ -16,19 +15,16 @@ from src.tools.valuation_analysis import (
     calculate_residual_income,
     aggregate_valuation_methods,
 )
+from src.utils.model_selector import select_model
 
 load_dotenv()
 
-DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+# Force Gemini for this agent to enable google_search tool
+selected_model = select_model(model_preference="gemini")
 
-# 1) one-time setup
-# model must be your Azure *deployment name*, prefixed with 'azure/'
-azure_llm = LiteLlm(model=f"azure/{DEPLOYMENT}", llm_client=LiteLLMClient())
-
-# 2) use it in your agents
 # Valuation Agent with a variety of valuation model tools
 valuation_agent = LlmAgent(
-    model=azure_llm,  # pass the instance, not a string
+    model=selected_model,
     name="valuation_agent",
     instruction=VALUATION_AGENT_PROMPT,
     tools=[
@@ -40,7 +36,7 @@ valuation_agent = LlmAgent(
         aggregate_valuation_methods,
     ],
     generate_content_config=types.GenerateContentConfig(
-        temperature=1.0,  # Low temperature for precise, data-driven valuation
+        temperature=0.0,  # Very low temperature for precise, data-driven valuation
     ),
     output_schema=ValuationAgentOutput,
     output_key="valuation_agent_output",
