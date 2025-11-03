@@ -11,4 +11,4 @@ wheels/
 
 .env
 
-*.json
+output/*.json

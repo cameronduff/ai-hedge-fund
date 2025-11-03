@@ -1,7 +1,6 @@
 import os
 
 from google.adk.agents import LlmAgent
-from google.adk.tools import google_search
 from google.genai import types
 
 from dotenv import load_dotenv
@@ -19,8 +18,9 @@ from src.utils.model_selector import select_model
 
 load_dotenv()
 
-# Force Gemini for this agent to enable google_search tool
-selected_model = select_model(model_preference="gemini")
+# Use Azure for this agent - has get_company_news tool, doesn't need google_search
+model_preference = os.getenv("MODEL_PREFERENCE")
+selected_model = select_model(model_preference=model_preference)
 
 # Sentiment Agent with tools for analyzing market sentiment from various sources
 sentiment_agent = LlmAgent(
@@ -28,7 +28,6 @@ sentiment_agent = LlmAgent(
     name="sentiment_agent",
     instruction=SENTIMENT_AGENT_PROMPT,
     tools=[
-        google_search,
         get_company_news,
         analyze_article_sentiment,
         calculate_sentiment_metrics,
