@@ -13,5 +13,5 @@ class PortfolioManagerOutput(BaseModel):
     """Output from Portfolio Manager's trading decision analysis."""
 
     decisions: dict[str, PortfolioDecision] = Field(
-        description="Dictionary of ticker to trading decisions"
+        default_factory=dict, description="Dictionary of ticker to trading decisions"
     )

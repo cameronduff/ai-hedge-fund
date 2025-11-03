@@ -239,12 +239,11 @@ MODEL_PREFERENCE=gemini   # Force Gemini
 
 Each agent uses carefully tuned temperature settings for optimal performance:
 
-| Agent Type        | Temperature | Reasoning                                                             |
-| ----------------- | ----------- | --------------------------------------------------------------------- |
-| Analytical Agents | 0.1         | Fundamentals, Growth, Technical, Valuation, Risk - precision required |
-| Sentiment Agent   | 0.3         | Moderate creativity for nuanced interpretation                        |
-| Portfolio Manager | 0.5         | Balanced decision-making for strategic choices                        |
-| Investor Agents   | 0.3-0.7     | Varies by investment philosophy                                       |
+| Agent Type        | Temperature | Reasoning                                                                             |
+| ----------------- | ----------- | ------------------------------------------------------------------------------------- |
+| Analytical Agents | 0.0-0.1     | Fundamentals, Sentiment, Growth, Technical, Valuation, Risk - strict schema adherence |
+| Portfolio Manager | 0.5         | Balanced decision-making for strategic choices                                        |
+| Investor Agents   | 0.3-0.7     | Varies by investment philosophy                                                       |
 
 ## Usage
 

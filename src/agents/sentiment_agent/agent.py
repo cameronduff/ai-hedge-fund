@@ -35,7 +35,8 @@ sentiment_agent = LlmAgent(
         assess_market_sentiment,
     ],
     generate_content_config=types.GenerateContentConfig(
-        temperature=0.3,  # Moderate temperature to capture nuanced sentiment
+        temperature=0.0,  # Strict schema adherence - sentiment classification is deterministic
+        response_modalities=["TEXT"],
     ),
     output_schema=SentimentAgentOutput,
     output_key="sentiment_agent_output",

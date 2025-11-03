@@ -25,5 +25,6 @@ class FundamentalsAgentOutput(BaseModel):
     """Output from Fundamentals Agent's financial analysis."""
 
     analysis: Dict[str, Optional[FundamentalAnalysis]] = Field(
-        description="Fundamental analysis for each ticker (None if analysis could not be completed)"
+        default_factory=dict,
+        description="Fundamental analysis for each ticker (None if analysis could not be completed)",
     )

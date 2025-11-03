@@ -32,12 +32,17 @@ class SentimentAgentOutput(BaseModel):
     """Output schema for sentiment analysis agent"""
 
     sentiment_analysis: Dict[str, Optional[SentimentAnalysis]] = Field(
-        description="Sentiment analysis results for each ticker (None if analysis could not be completed)"
+        default_factory=dict,
+        description="Sentiment analysis results for each ticker (None if analysis could not be completed)",
     )
     summary: str = Field(
-        description="Overall summary of sentiment analysis across all tickers"
+        default="Sentiment analysis could not be completed",
+        description="Overall summary of sentiment analysis across all tickers",
     )
     market_sentiment: str = Field(
-        description="Overall market sentiment: bullish, bearish, or neutral"
+        default="neutral",
+        description="Overall market sentiment: bullish, bearish, or neutral",
     )
-    total_tickers_analyzed: int = Field(description="Total number of tickers analyzed")
+    total_tickers_analyzed: int = Field(
+        default=0, description="Total number of tickers analyzed"
+    )

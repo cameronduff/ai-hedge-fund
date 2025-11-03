@@ -45,5 +45,6 @@ class RiskManagerOutput(BaseModel):
     """Output from Risk Manager's volatility and correlation analysis."""
 
     risk_analysis: Dict[str, Optional[RiskAnalysis]] = Field(
-        description="Risk analysis for each ticker (None if analysis could not be completed)"
+        default_factory=dict,
+        description="Risk analysis for each ticker (None if analysis could not be completed)",
     )

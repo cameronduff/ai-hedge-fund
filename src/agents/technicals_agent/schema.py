@@ -78,5 +78,6 @@ class TechnicalAgentOutput(BaseModel):
     """Output from Technical Agent's comprehensive technical analysis."""
 
     analysis: Dict[str, Optional[TechnicalAnalysis]] = Field(
-        description="Technical analysis for each ticker (None if analysis could not be completed)"
+        default_factory=dict,
+        description="Technical analysis for each ticker (None if analysis could not be completed)",
     )
