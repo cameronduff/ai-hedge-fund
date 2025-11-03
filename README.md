@@ -1,5 +1,8 @@
 # AI Hedge Fund
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+
 An intelligent investment analysis system that combines multiple investment philosophies and analytical approaches using AI agents to generate comprehensive trading recommendations. This system simulates how a sophisticated hedge fund might analyze securities using diverse methodologies from legendary investors and modern quantitative techniques.
 
 ## Attribution
@@ -460,4 +463,14 @@ Contributions are welcome! Please:
 
 ## License
 
-MIT License - see LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+**What this means:**
+
+- ✅ Free to use for commercial and personal projects
+- ✅ Free to modify and distribute
+- ✅ Free to use privately
+- ❗ No warranty or liability
+- ❗ Must include original copyright and license notice
+
+Copyright (c) 2025 Cameron Duff
