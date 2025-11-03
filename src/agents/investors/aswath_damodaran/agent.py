@@ -2,7 +2,7 @@ import os
 
 from google.adk.agents import LlmAgent
 from google.genai import types
-from google.adk.models.lite_llm import LiteLlm
+from google.adk.models.lite_llm import LiteLlm, LiteLLMClient
 from loguru import logger
 from dotenv import load_dotenv
 
@@ -19,6 +19,10 @@ from src.tools.damodaran_analysis import (
 load_dotenv()
 
 DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+
+# 1) one-time setup
+# model must be your Azure *deployment name*, prefixed with 'azure/'
+azure_llm = LiteLlm(model=f"azure/{DEPLOYMENT}", llm_client=LiteLLMClient())
 
 
 def build_aswath_damodaran_agent() -> LlmAgent:
@@ -37,7 +41,7 @@ def build_aswath_damodaran_agent() -> LlmAgent:
     """
 
     return LlmAgent(
-        model=f"azure/{DEPLOYMENT}",
+        model=azure_llm,  # pass the instance, not a string
         name="aswath_damodaran_agent",
         instruction=ASWATH_DAMODARAN_PROMPT,
         tools=[
@@ -48,7 +52,7 @@ def build_aswath_damodaran_agent() -> LlmAgent:
             calculate_margin_of_safety,
         ],
         generate_content_config=types.GenerateContentConfig(
-            temperature=0.1,  # Low temperature for consistent analytical approach
+            temperature=1.0,  # Low temperature for consistent analytical approach
         ),
         output_schema=AswathDamodaranSignal,
         output_key="aswath_damodaran_agent_output",
