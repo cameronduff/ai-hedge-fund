@@ -3,7 +3,6 @@ import os
 from google.adk.agents import LlmAgent
 from google.adk.tools import ToolContext
 from google.genai import types
-from google.adk.models.lite_llm import LiteLlm, LiteLLMClient
 
 from src.agents.portfolio_manager.prompt import PORTFOLIO_MANAGER_PROMPT
 from src.agents.portfolio_manager.schema import PortfolioManagerOutput
@@ -13,6 +12,7 @@ from src.tools.portfolio_management import (
     assess_portfolio_risk,
     optimize_trade_timing,
 )
+from src.utils.model_selector import select_model
 
 
 def exit_loop(tool_context: ToolContext):
@@ -23,16 +23,13 @@ def exit_loop(tool_context: ToolContext):
     return {}
 
 
-DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+# Automatically select the appropriate model
+model_preference = os.getenv("MODEL_PREFERENCE")
+selected_model = select_model(model_preference=model_preference)
 
-# 1) one-time setup
-# model must be your Azure *deployment name*, prefixed with 'azure/'
-azure_llm = LiteLlm(model=f"azure/{DEPLOYMENT}", llm_client=LiteLLMClient())
-
-# 2) use it in your agents
 # Portfolio Manager Agent with advanced portfolio management and risk assessment tools
 portfolio_manager_agent = LlmAgent(
-    model=azure_llm,  # pass the instance, not a string
+    model=selected_model,
     name="portfolio_manager_agent",
     instruction=PORTFOLIO_MANAGER_PROMPT,
     tools=[
@@ -43,7 +40,7 @@ portfolio_manager_agent = LlmAgent(
         exit_loop,
     ],
     generate_content_config=types.GenerateContentConfig(
-        temperature=0.2,  # Low temperature for disciplined, systematic portfolio management
+        temperature=0.5,  # Moderate temperature for balanced decision-making
     ),
     output_schema=PortfolioManagerOutput,
     output_key="portfolio_manager_output",

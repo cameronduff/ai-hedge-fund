@@ -127,6 +127,86 @@ GENAI_LLM_RPM=2  # Requests per minute
 2. **Trading 212 API**: Register at [Trading 212](https://www.trading212.com/) and request API access
 3. **Finnhub API**: Sign up at [Finnhub](https://finnhub.io/) for free financial data access
 
+### Model Configuration
+
+The system supports **multiple LLM providers** with automatic detection:
+
+- **Azure OpenAI** (recommended for production)
+- **OpenAI** (direct API)
+- **Google Gemini**
+
+#### Auto-Detection
+
+The system automatically selects the best available provider based on configured API keys:
+
+**Priority Order**: Azure OpenAI > OpenAI > Gemini
+
+#### Quick Test
+
+Verify your model configuration:
+
+```bash
+python test_model_selector.py
+```
+
+This shows which provider and model will be used.
+
+#### Provider-Specific Configuration
+
+**Azure OpenAI** (add to `.env`):
+
+```bash
+AZURE_API_BASE=https://your-resource.cognitiveservices.azure.com
+AZURE_API_KEY=your_azure_api_key
+AZURE_DEPLOYMENT_NAME=gpt-4o-mini
+AZURE_API_VERSION=2024-12-01-preview
+```
+
+**OpenAI** (add to `.env`):
+
+```bash
+OPENAI_API_KEY=your_openai_api_key
+OPENAI_MODEL=gpt-4o-mini  # Optional, defaults to gpt-4o-mini
+```
+
+**Google Gemini** (already in `.env`):
+
+```bash
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini/gemini-2.0-flash-exp  # Optional
+```
+
+#### Manual Override
+
+Force a specific provider by setting `MODEL_PREFERENCE` in your `.env`:
+
+```bash
+MODEL_PREFERENCE=azure    # Use Azure OpenAI
+MODEL_PREFERENCE=openai   # Use OpenAI
+MODEL_PREFERENCE=gemini   # Use Google Gemini
+```
+
+#### Switching Providers
+
+No code changes needed! Just:
+
+1. Add new provider credentials to `.env`
+2. (Optional) Set `MODEL_PREFERENCE`
+3. Restart the application
+
+**Example**: Development with Gemini, Production with Azure
+
+```bash
+# Development
+GEMINI_API_KEY=your_key
+MODEL_PREFERENCE=gemini
+
+# Production
+AZURE_DEPLOYMENT_NAME=gpt-4o-mini
+AZURE_API_KEY=your_key
+MODEL_PREFERENCE=azure
+```
+
 ### Environment Variables
 
 Load environment variables using:

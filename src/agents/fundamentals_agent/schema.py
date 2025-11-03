@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from typing_extensions import Literal
-from typing import Dict
+from typing import Dict, Optional
 
 
 class FundamentalSignalDetail(BaseModel):
@@ -24,6 +24,6 @@ class FundamentalAnalysis(BaseModel):
 class FundamentalsAgentOutput(BaseModel):
     """Output from Fundamentals Agent's financial analysis."""
 
-    analysis: Dict[str, FundamentalAnalysis] = Field(
-        description="Fundamental analysis for each ticker"
+    analysis: Dict[str, Optional[FundamentalAnalysis]] = Field(
+        description="Fundamental analysis for each ticker (None if analysis could not be completed)"
     )

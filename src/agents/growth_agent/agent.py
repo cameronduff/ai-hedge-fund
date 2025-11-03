@@ -3,7 +3,6 @@ import os
 from google.adk.agents import LlmAgent
 from google.adk.tools import google_search
 from google.genai import types
-from google.adk.models.lite_llm import LiteLlm, LiteLLMClient
 
 from src.agents.growth_agent.prompt import GROWTH_AGENT_PROMPT
 from src.agents.growth_agent.schema import GrowthAgentOutput
@@ -15,17 +14,14 @@ from src.tools.growth_analysis import (
     analyze_insider_activity,
     assess_financial_stability,
 )
+from src.utils.model_selector import select_model
 
-DEPLOYMENT = os.environ["AZURE_DEPLOYMENT_NAME"]  # e.g. "gpt-4o-mini"
+# Force Gemini for this agent to enable google_search tool
+selected_model = select_model(model_preference="gemini")
 
-# 1) one-time setup
-# model must be your Azure *deployment name*, prefixed with 'azure/'
-azure_llm = LiteLlm(model=f"azure/{DEPLOYMENT}", llm_client=LiteLLMClient())
-
-# 2) use it in your agents
 # Growth Agent with tools for analyzing growth drivers and projecting future performance
 growth_agent = LlmAgent(
-    model=azure_llm,  # pass the instance, not a string
+    model=selected_model,
     name="growth_agent",
     instruction=GROWTH_AGENT_PROMPT,
     tools=[

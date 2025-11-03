@@ -34,7 +34,7 @@ peter_lynch_agent = LlmAgent(
         calculate_lynch_score,
     ],
     generate_content_config=types.GenerateContentConfig(
-        temperature=0.3,  # Moderate temperature for Lynch's practical, intuitive approach
+        temperature=1.0,  # Moderate temperature for Lynch's practical, intuitive approach
     ),
     output_schema=PeterLynchSignal,
     output_key="peter_lynch_agent_output",
