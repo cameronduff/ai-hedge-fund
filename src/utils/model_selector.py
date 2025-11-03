@@ -76,7 +76,7 @@ def select_model(
                     "Gemini preference specified but GEMINI_API_KEY not found"
                 )
             # Default to gemini-2.0-flash-exp if using Gemini
-            model_name = os.getenv("GEMINI_MODEL", "gemini/gemini-2.0-flash-exp")
+            model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
             logger.info(f"Using Gemini model: {model_name}")
             return model_name
 
@@ -97,7 +97,7 @@ def select_model(
         return LiteLlm(model=model_name, llm_client=LiteLLMClient())
 
     elif gemini_api_key:
-        model_name = os.getenv("GEMINI_MODEL", "gemini/gemini-2.0-flash-exp")
+        model_name = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
         logger.info(f"Auto-detected Gemini model: {model_name}")
         return model_name
 
@@ -145,6 +145,6 @@ def get_model_info() -> dict:
         info["providers_available"].append("gemini")
         if not info["default_provider"]:
             info["default_provider"] = "gemini"
-            info["model"] = os.getenv("GEMINI_MODEL", "gemini/gemini-2.0-flash-exp")
+            info["model"] = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
     return info
