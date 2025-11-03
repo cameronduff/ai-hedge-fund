@@ -67,5 +67,6 @@ class GrowthAgentOutput(BaseModel):
     """Output from Growth Agent's comprehensive growth analysis."""
 
     analysis: Dict[str, Optional[GrowthAnalysis]] = Field(
-        description="Growth analysis for each ticker (None if analysis could not be completed)"
+        default_factory=dict,
+        description="Growth analysis for each ticker (None if analysis could not be completed)",
     )

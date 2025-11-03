@@ -124,18 +124,24 @@ class ValuationAgentOutput(BaseModel):
     """Output schema for valuation analysis agent"""
 
     valuation_analysis: Dict[str, Optional[ValuationAnalysis]] = Field(
-        description="Comprehensive valuation analysis results for each ticker (None if analysis could not be completed)"
+        default_factory=dict,
+        description="Comprehensive valuation analysis results for each ticker (None if analysis could not be completed)",
     )
-    summary: str = Field(description="Portfolio-level valuation summary and insights")
+    summary: str = Field(
+        default="Valuation analysis could not be completed",
+        description="Portfolio-level valuation summary and insights",
+    )
     methodology_notes: str = Field(
-        description="Notes on valuation methodologies and assumptions used"
+        default="Standard valuation methodologies applied",
+        description="Notes on valuation methodologies and assumptions used",
     )
     market_context: str = Field(
-        description="Current market valuation context and environment"
+        default="Market context unavailable",
+        description="Current market valuation context and environment",
     )
     top_value_opportunities: list[str] = Field(
-        description="Tickers with highest upside potential"
+        default_factory=list, description="Tickers with highest upside potential"
     )
     valuation_concerns: list[str] = Field(
-        description="Tickers with significant overvaluation risks"
+        default_factory=list, description="Tickers with significant overvaluation risks"
     )
