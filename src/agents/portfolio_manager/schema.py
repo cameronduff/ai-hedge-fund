@@ -1,5 +1,8 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing_extensions import Literal
+from typing import Any
+
+from src.utils.schema_validators import strip_markdown_fences
 
 
 class PortfolioDecision(BaseModel):
@@ -15,3 +18,9 @@ class PortfolioManagerOutput(BaseModel):
     decisions: dict[str, PortfolioDecision] = Field(
         default_factory=dict, description="Dictionary of ticker to trading decisions"
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_and_strip_markdown(cls, data: Any) -> Any:
+        """Strip markdown code fences if the LLM wraps JSON in them."""
+        return strip_markdown_fences(data)

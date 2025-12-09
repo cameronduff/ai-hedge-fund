@@ -56,7 +56,14 @@ def save_results(
 def main():
     """Main execution function."""
     # Configuration
-    PIE_ID = 5855432  # set to None to include all pies
+    PIE_ID = os.getenv("T212_PIE_ID")  # Optional: filter to specific pie
+    if PIE_ID:
+        try:
+            PIE_ID = int(PIE_ID)
+        except ValueError:
+            logger.warning(f"Invalid T212_PIE_ID: {PIE_ID}, ignoring...")
+            PIE_ID = None
+
     APP_NAME = "ai_hedge_fund"
 
     # Ensure output directory exists

@@ -19,7 +19,8 @@ from src.utils.model_selector import select_model
 
 load_dotenv()
 
-# Force Gemini for this agent to enable google_search tool
+# Use Gemini for google_search capability despite rate limits
+# Free tier: 10 RPM - adjust GENAI_LLM_RPM in .env to control rate
 selected_model = select_model(model_preference="gemini")
 
 # Valuation Agent with a variety of valuation model tools
@@ -28,7 +29,7 @@ valuation_agent = LlmAgent(
     name="valuation_agent",
     instruction=VALUATION_AGENT_PROMPT,
     tools=[
-        google_search,
+        google_search,  # Enables real-time market research
         calculate_enhanced_dcf,
         calculate_owner_earnings,
         calculate_ev_ebitda_valuation,
@@ -37,6 +38,7 @@ valuation_agent = LlmAgent(
     ],
     generate_content_config=types.GenerateContentConfig(
         temperature=0.0,  # Very low temperature for precise, data-driven valuation
+        response_modalities=["TEXT"],
     ),
     output_schema=ValuationAgentOutput,
     output_key="valuation_agent_output",

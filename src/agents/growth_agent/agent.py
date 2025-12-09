@@ -16,7 +16,8 @@ from src.tools.growth_analysis import (
 )
 from src.utils.model_selector import select_model
 
-# Force Gemini for this agent to enable google_search tool
+# Use Gemini for google_search capability despite rate limits
+# Free tier: 10 RPM - adjust GENAI_LLM_RPM in .env to control rate
 selected_model = select_model(model_preference="gemini")
 
 # Growth Agent with tools for analyzing growth drivers and projecting future performance
@@ -25,7 +26,7 @@ growth_agent = LlmAgent(
     name="growth_agent",
     instruction=GROWTH_AGENT_PROMPT,
     tools=[
-        google_search,
+        google_search,  # Enables real-time market research
         calculate_trend_slope,
         analyze_historical_growth,
         analyze_growth_valuation,
@@ -34,7 +35,8 @@ growth_agent = LlmAgent(
         assess_financial_stability,
     ],
     generate_content_config=types.GenerateContentConfig(
-        temperature=0.3,  # Moderate temperature for balanced growth analysis
+        temperature=0.0,  # Low temperature for precise growth analysis
+        response_modalities=["TEXT"],
     ),
     output_schema=GrowthAgentOutput,
     output_key="growth_agent_output",
