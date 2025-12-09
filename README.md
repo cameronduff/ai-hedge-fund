@@ -138,12 +138,12 @@ GENAI_LLM_RPM=2           # Requests per minute for LLM calls
 
 #### LLM Provider Configuration (At Least One Required)
 
-You must configure **at least one** LLM provider. The system uses a hybrid approach:
+You must configure **at least one** LLM provider. The system uses a **hybrid approach**:
 
-- **Azure/OpenAI**: Used for analytical agents (fundamentals, sentiment, risk, portfolio)
-- **Gemini**: Used for research agents with web search (growth, technical, valuation)
+- **Azure/OpenAI**: Analytical agents (fundamentals, sentiment, risk, portfolio, all investor agents)
+- **Gemini**: Research agents with web search (growth, technical, valuation)
 
-**Recommended Setup**: Configure both Azure and Gemini for full functionality.
+**Recommended Setup**: Configure both Azure and Gemini for full functionality with real-time market data.
 
 **Option 1: Azure OpenAI** (Recommended for production)
 
@@ -205,12 +205,14 @@ The system automatically selects providers based on configured API keys with thi
 
 #### Agent-Specific Model Assignment
 
-Different agents use different providers based on their needs:
+The system uses different providers strategically:
 
 | Provider         | Agents                                                                           | Reason                                              |
 | ---------------- | -------------------------------------------------------------------------------- | --------------------------------------------------- |
 | **Azure/OpenAI** | Fundamentals, Sentiment, Risk Manager, Portfolio Manager, All 12 Investor Agents | Precise structured output, better schema compliance |
-| **Gemini**       | Growth, Technical, Valuation                                                     | Web search capabilities via `google_search` tool    |
+| **Gemini**       | Growth, Technical, Valuation                                                     | Real-time web research via `google_search` tool     |
+
+**Important**: Gemini free tier has a 10 RPM limit. Set `GENAI_LLM_RPM=1` in `.env` for reliable operation (slower but won't hit limits). The trade-off for google_search capability is longer execution time.
 
 #### Testing Your Configuration
 
@@ -422,11 +424,19 @@ src/
 - Solution: Lower temperatures (0.1-0.3) improve schema compliance
 - Check that you're using a compatible model (gpt-4o-mini, gemini-2.0-flash-exp)
 
-**"Rate limit exceeded (429)"**
+**"Rate limit exceeded (429)" - Trading 212**
 
 - Trading 212 API has rate limits
 - Solution: The system automatically retries with exponential backoff
 - Be patient - the pipeline may take 5-10 minutes due to API limits
+
+**"Rate limit exceeded (429)" - Gemini RESOURCE_EXHAUSTED**
+
+- Gemini free tier: 10 requests per minute
+- With 3 Gemini agents (growth, technical, valuation) running in parallel, each making multiple tool calls, you can hit this limit
+- **Solution 1**: Set `GENAI_LLM_RPM=1` in `.env` (recommended - slower but reliable)
+- **Solution 2**: Upgrade to Gemini paid tier for higher limits
+- **Trade-off**: Lower RPM = slower pipeline but keeps google_search capability for real-time market data
 
 **"Gemini refusing to process request"**
 

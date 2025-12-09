@@ -231,5 +231,7 @@ Return a single JSON object matching this schema exactly:
   "valuation_concerns": ["<ticker1>", "<ticker2>"]
 }
 
+CRITICAL: Return ONLY the raw JSON object. Do NOT wrap it in markdown code fences (```json or ```). The output must be pure JSON that can be directly parsed.
+
 Do NOT include fields named 'actions', 'notes', or 'recommendations'.
 """

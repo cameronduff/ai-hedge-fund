@@ -3,16 +3,13 @@ Financial analysis tools for Aswath Damodaran-style investment analysis.
 Implements his core valuation methodologies as Google ADK tools.
 """
 
-from typing import Dict, List, Optional, Any, Annotated
+from typing import Dict, List, Optional, Any
 import json
 from loguru import logger
 
 
 def analyze_growth_and_reinvestment(
-    financial_data: Annotated[
-        Dict[str, Any],
-        "Dictionary containing historical financial metrics including revenue_history, fcff_history, and return_on_invested_capital",
-    ],
+    financial_data: Dict[str, Any],
 ) -> Dict[str, Any]:
     """
     Analyze growth patterns and reinvestment efficiency following Damodaran's framework.
@@ -24,7 +21,8 @@ def analyze_growth_and_reinvestment(
     - +1 for ROIC > 10% (reinvestment efficiency hurdle)
 
     Args:
-        financial_data: Dictionary containing historical financial metrics
+        financial_data: Dictionary containing historical financial metrics including
+                       revenue_history, fcff_history, and return_on_invested_capital
 
     Returns:
         Dict with score, max_score, details, and key metrics
@@ -99,10 +97,7 @@ def analyze_growth_and_reinvestment(
 
 
 def analyze_risk_profile(
-    financial_data: Annotated[
-        Dict[str, Any],
-        "Dictionary containing risk-related financial metrics including beta, debt_to_equity, ebit, and interest_expense",
-    ],
+    financial_data: Dict[str, Any],
 ) -> Dict[str, Any]:
     """
     Assess financial and business risk following Damodaran's risk framework.
@@ -110,6 +105,10 @@ def analyze_risk_profile(
     Risk score (0-3 points):
     - +1 for Beta < 1.3 (lower systematic risk)
     - +1 for Debt/Equity < 1.0 (conservative leverage)
+
+    Args:
+        financial_data: Dictionary containing risk-related financial metrics including
+                       beta, debt_to_equity, ebit, and interest_expense
     - +1 for Interest Coverage > 3x (adequate debt service ability)
 
     Args:
@@ -181,10 +180,7 @@ def analyze_risk_profile(
 
 
 def analyze_relative_valuation(
-    financial_data: Annotated[
-        Dict[str, Any],
-        "Dictionary containing valuation metrics including pe_history and current_pe",
-    ],
+    financial_data: Dict[str, Any],
 ) -> Dict[str, Any]:
     """
     Perform relative valuation analysis using P/E ratios vs historical medians.
@@ -193,6 +189,10 @@ def analyze_relative_valuation(
     - +1 if current P/E < 70% of 5-year median (undervalued)
     - 0 if between 70%-130% of median (fairly valued)
     - -1 if > 130% of median (overvalued)
+
+    Args:
+        financial_data: Dictionary containing valuation metrics including
+                       pe_history and current_pe
 
     Args:
         financial_data: Dictionary containing valuation metrics
@@ -265,13 +265,8 @@ def analyze_relative_valuation(
 
 
 def calculate_intrinsic_value_dcf(
-    financial_data: Annotated[
-        Dict[str, Any],
-        "Dictionary with cash flow and share data including free_cash_flow, shares_outstanding, revenue_history",
-    ],
-    risk_analysis: Annotated[
-        Dict[str, Any], "Dictionary with cost of equity estimate from risk analysis"
-    ],
+    financial_data: Dict[str, Any],
+    risk_analysis: Dict[str, Any],
 ) -> Dict[str, Any]:
     """
     Calculate intrinsic value using FCFF DCF model (Damodaran methodology).
@@ -283,6 +278,9 @@ def calculate_intrinsic_value_dcf(
     - Discount at cost of equity from risk analysis
 
     Args:
+        financial_data: Dictionary with cash flow and share data including
+                       free_cash_flow, shares_outstanding, revenue_history
+        risk_analysis: Dictionary with cost of equity estimate from risk analysis
         financial_data: Dictionary with cash flow and share data
         risk_analysis: Dictionary with cost of equity estimate
 
@@ -370,8 +368,8 @@ def calculate_intrinsic_value_dcf(
 
 
 def calculate_margin_of_safety(
-    intrinsic_value: Annotated[float, "DCF-derived intrinsic value"],
-    market_value: Annotated[float, "Current market capitalization or price"],
+    intrinsic_value: float,
+    market_value: float,
 ) -> Optional[float]:
     """
     Calculate margin of safety as percentage difference between intrinsic and market value.

@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import Dict, Any, Optional
+
+from src.utils.schema_validators import strip_markdown_fences
 
 
 class DCFScenarioAnalysis(BaseModel):
@@ -145,3 +147,9 @@ class ValuationAgentOutput(BaseModel):
     valuation_concerns: list[str] = Field(
         default_factory=list, description="Tickers with significant overvaluation risks"
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_and_strip_markdown(cls, data: Any) -> Any:
+        """Strip markdown code fences if the LLM wraps JSON in them."""
+        return strip_markdown_fences(data)

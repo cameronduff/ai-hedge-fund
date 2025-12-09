@@ -7,6 +7,9 @@ from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from loguru import logger
+from datetime import datetime
+from pathlib import Path
+import re
 
 
 async def run_pipeline_async(
@@ -78,16 +81,60 @@ async def run_pipeline_async(
                 final_text = event.content.parts[0].text or final_text
 
     logger.success("Pipeline execution complete.")
-
-    # Try to parse final JSON
+    # DEBUG: persist raw LLM output so we can inspect why JSON parsing failed
     try:
-        payload = json.loads(final_text)
-        if isinstance(payload, dict) and (
-            "recommendations" in payload or "actions" in payload
-        ):
+        debug_dir = Path("output")
+        debug_dir.mkdir(exist_ok=True)
+        raw_file = (
+            debug_dir
+            / f"raw_pipeline_response_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+        )
+        with open(raw_file, "w", encoding="utf-8") as rf:
+            rf.write(final_text or "")
+        logger.info(f"Raw pipeline response saved to: {raw_file}")
+    except Exception as e:
+        logger.warning(f"Failed to save raw pipeline response: {e}")
+
+    # Try to parse final JSON. First, attempt to extract JSON even if wrapped in markdown or text.
+    def _extract_json_like(text: str) -> str | None:
+        if not text:
+            return None
+
+        # Remove common markdown code fences ```json ... ``` or ``` ... ```
+        fence_re = re.compile(r"```(?:json)?\n?(.*?)```", re.DOTALL | re.IGNORECASE)
+        m = fence_re.search(text)
+        if m:
+            candidate = m.group(1).strip()
+            if candidate:
+                return candidate
+
+        # If no fenced block, try to find the first balanced JSON object {...}
+        # This handles cases where the LLM returns text before/after the JSON.
+        brace_re = re.compile(r"\{(?:[^{}]*|(?R))*\}", re.DOTALL)
+        m2 = brace_re.search(text)
+        if m2:
+            return m2.group(0)
+
+        # As a fallback, try to find a JSON array [ ... ]
+        bracket_re = re.compile(r"\[(?:[^\[\]]*|(?R))*\]", re.DOTALL)
+        m3 = bracket_re.search(text)
+        if m3:
+            return m3.group(0)
+
+        return None
+
+    try:
+        candidate = _extract_json_like(final_text)
+        if candidate:
+            payload = json.loads(candidate)
+            if isinstance(payload, dict) and (
+                "recommendations" in payload or "actions" in payload
+            ):
+                return {"output": payload}
+            # If it's an array or other valid JSON, still return it under output
             return {"output": payload}
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Failed to parse extracted JSON: {e}")
 
     # Fallback to session state (unchanged from your code)
     po = session.state.get("programme_output_consensus")

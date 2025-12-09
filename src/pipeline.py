@@ -62,7 +62,8 @@ def get_pipeline() -> BaseAgent:
         ],
     )
 
-    investors = ParallelAgent(
+    # Run investor agents sequentially to avoid bursting API rate limits
+    investors = SequentialAgent(
         name="investors_agent",
         sub_agents=[
             aswath_damodaran_agent,
@@ -97,10 +98,11 @@ def get_pipeline() -> BaseAgent:
     pipeline_with_retry = wrap_llm_agents_with_retry(
         pipeline,
         # --- 429 / rate limit handling ---
-        max_429_retries=2,  # only two total attempts; avoid thundering herds
-        base_delay_429=5.0,  # start with ~5s delay (Gemini RetryInfo often ~20–45s)
-        backoff=2.0,  # exponential backoff doubling each time
-        max_delay=90.0,  # allow waits up to ~1.5 min if RetryInfo missing
+        # Gemini free tier (10 RPM) - be patient with retries for google_search capability
+        max_429_retries=5,  # More retries for rate-limited Gemini calls (was 2)
+        base_delay_429=15.0,  # Start with longer delay to avoid re-hitting limit (was 5.0)
+        backoff=2.0,  # exponential backoff doubling each time (15s → 30s → 60s → 120s → 240s)
+        max_delay=120.0,  # allow waits up to 2 min between retries (was 90.0)
         # --- transient server error (5xx / UNAVAILABLE) handling ---
         max_transient_retries=4,  # tolerate a few 503 spikes from overloaded model
         base_delay_transient=2.0,
