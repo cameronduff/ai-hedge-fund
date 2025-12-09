@@ -3,18 +3,13 @@ Ben Graham-style financial analysis tools.
 Implements his classic value investing methodologies as Google ADK tools.
 """
 
-from typing import Dict, List, Optional, Any, Annotated
+from typing import Dict, List, Optional, Any
 import json
 import math
 from loguru import logger
 
 
-def analyze_earnings_stability(
-    financial_data: Annotated[
-        Dict[str, Any],
-        "Dictionary containing earnings_per_share history and other financial metrics",
-    ],
-) -> Dict[str, Any]:
+def analyze_earnings_stability(financial_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Analyze earnings stability following Benjamin Graham's criteria.
 
@@ -99,12 +94,7 @@ def analyze_earnings_stability(
     }
 
 
-def analyze_financial_strength(
-    financial_data: Annotated[
-        Dict[str, Any],
-        "Dictionary containing balance sheet data including current_assets, current_liabilities, total_assets, total_liabilities, and dividend history",
-    ],
-) -> Dict[str, Any]:
+def analyze_financial_strength(financial_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Analyze financial strength using Graham's conservative criteria.
 
@@ -207,11 +197,7 @@ def analyze_financial_strength(
 
 
 def analyze_valuation_graham(
-    financial_data: Annotated[
-        Dict[str, Any],
-        "Dictionary containing valuation data including current_assets, total_liabilities, book_value_per_share, earnings_per_share, shares_outstanding",
-    ],
-    market_cap: Annotated[float, "Current market capitalization of the company"],
+    financial_data: Dict[str, Any], market_cap: float
 ) -> Dict[str, Any]:
     """
     Perform Graham's classic valuation analysis using Net-Net and Graham Number methods.
@@ -323,15 +309,9 @@ def analyze_valuation_graham(
 
 
 def calculate_graham_score(
-    earnings_analysis: Annotated[
-        Dict[str, Any], "Results from earnings stability analysis"
-    ],
-    strength_analysis: Annotated[
-        Dict[str, Any], "Results from financial strength analysis"
-    ],
-    valuation_analysis: Annotated[
-        Dict[str, Any], "Results from Graham valuation analysis"
-    ],
+    earnings_analysis: Dict[str, Any],
+    strength_analysis: Dict[str, Any],
+    valuation_analysis: Dict[str, Any],
 ) -> Dict[str, Any]:
     """
     Calculate overall Graham investment score and generate signal.

@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import Optional, List, Dict, Any
+
+from src.utils.schema_validators import strip_markdown_fences
 
 
 class CorrelationEntry(BaseModel):
@@ -48,3 +50,9 @@ class RiskManagerOutput(BaseModel):
         default_factory=dict,
         description="Risk analysis for each ticker (None if analysis could not be completed)",
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_and_strip_markdown(cls, data: Any) -> Any:
+        """Strip markdown code fences if the LLM wraps JSON in them."""
+        return strip_markdown_fences(data)

@@ -20,7 +20,8 @@ from src.utils.model_selector import select_model
 
 load_dotenv()
 
-# Force Gemini for this agent to enable google_search tool
+# Use Gemini for google_search capability despite rate limits
+# Free tier: 10 RPM - adjust GENAI_LLM_RPM in .env to control rate
 selected_model = select_model(model_preference="gemini")
 
 # Technicals Agent with a suite of technical analysis tools
@@ -29,7 +30,7 @@ technical_agent = LlmAgent(
     name="technical_agent",
     instruction=TECHNICAL_AGENT_PROMPT,
     tools=[
-        google_search,
+        google_search,  # Enables real-time market research
         calculate_trend_indicators,
         calculate_mean_reversion_indicators,
         calculate_momentum_indicators,
@@ -39,6 +40,7 @@ technical_agent = LlmAgent(
     ],
     generate_content_config=types.GenerateContentConfig(
         temperature=0.0,  # Very low temperature for precise technical analysis
+        response_modalities=["TEXT"],
     ),
     output_schema=TechnicalAgentOutput,
     output_key="technical_agent_output",

@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import Dict, Any, Optional
+
+from src.utils.schema_validators import strip_markdown_fences
 
 
 class SentimentMetrics(BaseModel):
@@ -46,3 +48,9 @@ class SentimentAgentOutput(BaseModel):
     total_tickers_analyzed: int = Field(
         default=0, description="Total number of tickers analyzed"
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def validate_and_strip_markdown(cls, data: Any) -> Any:
+        """Strip markdown code fences if the LLM wraps JSON in them."""
+        return strip_markdown_fences(data)
