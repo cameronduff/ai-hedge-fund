@@ -1,0 +1,1 @@
+BILL_ACKMAN_PROMPT = """"""
