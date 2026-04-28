@@ -2,20 +2,35 @@ import base64
 import requests
 
 from app.core.config import settings
-from app.models.trading212_models import LimitOrderPayload, MarketOrderPayload
+from app.models.trading212_models import (
+    LimitOrderPayload,
+    MarketOrderPayload,
+    StopLimitOrderPayload,
+)
 
 
 class Trading212Client:
-    api_key = settings.TRADING_212_API_KEY
-    api_secret = settings.TRADING_212_API_SECRET
-    username = settings.TRADING_212_USERNAME
-    password = settings.TRADING_212_PASSWORD
+    def __init__(self):
+        self.api_key = settings.TRADING_212_API_KEY
+        self.api_secret = settings.TRADING_212_API_SECRET
+        self.username = settings.TRADING_212_API_KEY
+        self.password = settings.TRADING_212_API_SECRET
 
-    credentials_string = f"{api_key}:{api_secret}"
-    encoded_credentials = base64.b64encode(credentials_string.encode("utf-8")).decode(
-        "utf-8"
-    )
-    auth_header = f"Basic {encoded_credentials}"
+        self.credentials_string = f"{self.api_key}:{self.api_secret}"
+        self.encoded_credentials = base64.b64encode(
+            self.credentials_string.encode("utf-8")
+        ).decode("utf-8")
+        self.auth_header = f"Basic {self.encoded_credentials}"
+
+    def get_account_summary(self):
+        url = "https://demo.trading212.com/api/v0/equity/account/summary"
+        headers = {"Authorization": self.api_key}
+        auth = (self.username, self.password)
+
+        response = requests.get(url, headers=headers, auth=auth)
+
+        data = response.json()
+        return data
 
     def fetch_all_open_positions(self, query):
         url = "https://demo.trading212.com/api/v0/equity/positions"
@@ -39,7 +54,6 @@ class Trading212Client:
 
     def place_limit_order(self, payload: LimitOrderPayload):
         url = "https://demo.trading212.com/api/v0/equity/orders/limit"
-
         headers = {
             "Content-Type": "application/json",
             "Authorization": self.api_key,
@@ -55,12 +69,10 @@ class Trading212Client:
 
     def place_market_order(self, payload: MarketOrderPayload):
         url = "https://demo.trading212.com/api/v0/equity/orders/market"
-
         headers = {
             "Content-Type": "application/json",
             "Authorization": self.api_key,
         }
-
         auth = (self.username, self.password)
 
         response = requests.post(
@@ -72,3 +84,71 @@ class Trading212Client:
 
         data = response.json()
         return data
+
+    def place_stop_order(self, payload: MarketOrderPayload):
+        url = "https://demo.trading212.com/api/v0/equity/orders/stop"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "YOUR_API_KEY_HERE",
+        }
+        auth = (self.username, self.password)
+
+        response = requests.post(
+            url,
+            json=payload.model_dump_json(),
+            headers=headers,
+            auth=auth,
+        )
+
+        data = response.json()
+        return data
+
+    def place_stop_limit_rder(self, payload: StopLimitOrderPayload):
+        url = "https://demo.trading212.com/api/v0/equity/orders/stop_limit"
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": self.api_key,
+        }
+        auth = (self.username, self.password)
+
+        response = requests.post(
+            url,
+            json=payload.model_dump_json(),
+            headers=headers,
+            auth=auth,
+        )
+
+        data = response.json()
+        return data
+
+    def cancel_pending_order(self, id: int):
+        url = "https://demo.trading212.com/api/v0/equity/orders/" + id
+        headers = {"Authorization": self.api_key}
+        auth = (self.username, self.password)
+
+        response = requests.delete(url, headers=headers, auth=auth)
+
+        data = response.json()
+        return data
+
+    def get_pending_order_by_id(self, id: int):
+        url = "https://demo.trading212.com/api/v0/equity/orders/" + id
+        headers = {"Authorization": self.api_key}
+        auth = (self.username, self.password)
+
+        response = requests.get(url, headers=headers, auth=auth)
+
+        data = response.json()
+        return data
+
+
+if __name__ == "__main__":
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+    trading212_client = Trading212Client()
+
+    summary = trading212_client.get_account_summary()
+
+    print(summary)
