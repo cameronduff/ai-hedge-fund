@@ -8,6 +8,8 @@ from app.models.trading212_models import (
     StopLimitOrderPayload,
 )
 
+CONTENT_TYPE = "application/json"
+
 
 class Trading212Client:
     def __init__(self):
@@ -55,7 +57,7 @@ class Trading212Client:
     def place_limit_order(self, payload: LimitOrderPayload):
         url = "https://demo.trading212.com/api/v0/equity/orders/limit"
         headers = {
-            "Content-Type": "application/json",
+            "Content-Type": CONTENT_TYPE,
             "Authorization": self.api_key,
         }
         auth = (self.username, self.password)
@@ -70,7 +72,7 @@ class Trading212Client:
     def place_market_order(self, payload: MarketOrderPayload):
         url = "https://demo.trading212.com/api/v0/equity/orders/market"
         headers = {
-            "Content-Type": "application/json",
+            "Content-Type": CONTENT_TYPE,
             "Authorization": self.api_key,
         }
         auth = (self.username, self.password)
@@ -88,7 +90,7 @@ class Trading212Client:
     def place_stop_order(self, payload: MarketOrderPayload):
         url = "https://demo.trading212.com/api/v0/equity/orders/stop"
         headers = {
-            "Content-Type": "application/json",
+            "Content-Type": CONTENT_TYPE,
             "Authorization": "YOUR_API_KEY_HERE",
         }
         auth = (self.username, self.password)
@@ -106,7 +108,7 @@ class Trading212Client:
     def place_stop_limit_rder(self, payload: StopLimitOrderPayload):
         url = "https://demo.trading212.com/api/v0/equity/orders/stop_limit"
         headers = {
-            "Content-Type": "application/json",
+            "Content-Type": CONTENT_TYPE,
             "Authorization": self.api_key,
         }
         auth = (self.username, self.password)
