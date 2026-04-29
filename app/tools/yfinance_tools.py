@@ -14,7 +14,7 @@ def get_info_by_ticker(ticker: str):
     return yfinance_client.get_info_by_ticker(ticker)
 
 
-def get_balance_sheet_by_ticket(ticker: str):
+def get_balance_sheet_by_ticker(ticker: str):
     """
     Retrieves the company's most recent annual balance sheet.
     Use this to analyze the company's financial health, including total assets, liabilities, and shareholder equity.
@@ -22,7 +22,7 @@ def get_balance_sheet_by_ticket(ticker: str):
     Args:
         ticker (str): The stock ticker symbol (e.g., 'AAPL', 'MSFT').
     """
-    return yfinance_client.get_balance_sheet_by_ticket(ticker)
+    return yfinance_client.get_balance_sheet_by_ticker(ticker)
 
 
 def get_historical_data(ticker: str, period: str = "1mo"):
