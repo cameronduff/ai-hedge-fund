@@ -16,3 +16,5 @@ ai_hedge_fund = SequentialAgent(
         portfolio_manager_agent,
     ],
 )
+
+root_agent = ai_hedge_fund
