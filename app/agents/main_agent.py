@@ -8,8 +8,8 @@ from app.agents.management.portfolio_manager_agent.agent import (
     portfolio_manager_agent,
 )
 
-chief_of_staff_agent = SequentialAgent(
-    name="chief_of_staff_agent",
+ai_hedge_fund = SequentialAgent(
+    name="ai_hedge_fund",
     sub_agents=[
         quants_orchestrator_agent,
         investors_orchestrator_agent,
