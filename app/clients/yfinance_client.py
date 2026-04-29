@@ -10,7 +10,7 @@ class YFinanceClient:
         data = yf.Ticker(ticker)
         return data.info
 
-    def get_balance_sheet_by_ticket(self, ticker: str):
+    def get_balance_sheet_by_ticker(self, ticker: str):
         data = yf.Ticker(ticker)
         return data.balance_sheet
 
