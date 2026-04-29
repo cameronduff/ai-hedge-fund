@@ -4,6 +4,7 @@ from app.core.config import settings
 from app.agents.management.portfolio_manager_agent.prompt import (
     PORTFOLIO_MANAGER_PROMPT,
 )
+from app.agents.management.risk_manager_agent.agent import risk_manager_agent
 from app.tools.trading212_tools import fetch_all_open_positions, get_account_summary
 
 portfolio_manager_agent = LlmAgent(
@@ -11,4 +12,5 @@ portfolio_manager_agent = LlmAgent(
     model=settings.REASONING_MODEL,
     instruction=PORTFOLIO_MANAGER_PROMPT,
     tools=[fetch_all_open_positions, get_account_summary],
+    sub_agents=[risk_manager_agent],
 )
