@@ -4,8 +4,8 @@ from app.agents.quants.quants_orchestrator_agent.agent import quants_orchestrato
 from app.agents.investors.investors_orchestrator_agent.agent import (
     investors_orchestrator_agent,
 )
-from app.agents.management.executive_orchestrator_agent.agent import (
-    executive_orchestrator_agent,
+from app.agents.management.portfolio_manager_agent.agent import (
+    portfolio_manager_agent,
 )
 
 chief_of_staff_agent = SequentialAgent(
@@ -13,6 +13,6 @@ chief_of_staff_agent = SequentialAgent(
     sub_agents=[
         quants_orchestrator_agent,
         investors_orchestrator_agent,
-        executive_orchestrator_agent,
+        portfolio_manager_agent,
     ],
 )
