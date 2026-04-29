@@ -143,6 +143,16 @@ class Trading212Client:
         data = response.json()
         return data
 
+    def get_all_available_instruments(self):
+        url = "https://demo.trading212.com/api/v0/equity/metadata/instruments"
+        headers = {"Authorization": self.api_key}
+        auth = (self.username, self.password)
+
+        response = requests.get(url, headers=headers, auth=auth)
+
+        data = response.json()
+        return data
+
 
 if __name__ == "__main__":
     from dotenv import load_dotenv
