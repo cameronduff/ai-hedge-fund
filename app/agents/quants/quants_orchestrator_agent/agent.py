@@ -1,10 +1,13 @@
 from google.adk.agents import ParallelAgent
+from google.genai import types
 
 from app.agents.quants.fundamentals_agent.agent import fundamentals_agent
 from app.agents.quants.technicals_agent.agent import technicals_agent
 from app.agents.quants.growth_agent.agent import growth_agent
 from app.agents.quants.valuations_agent.agent import valuations_agent
 from app.models.quants_models import Ticker
+
+from loguru import logger
 
 # Note, needs a watch list to be fed in
 # TODO: Implement an algorithmic or AI strategy to dynamically choose these
@@ -13,8 +16,22 @@ quants_orchestrator_agent = ParallelAgent(
     sub_agents=[fundamentals_agent, technicals_agent, growth_agent, valuations_agent],
 )
 
+root_agent = quants_orchestrator_agent
+
 if __name__ == "__main__":
-    STOCKS_UNIVERSE = [
+    from google.adk.runners import Runner
+    from google.adk.sessions import InMemorySessionService
+    from uuid import uuid4
+    import asyncio
+    from dotenv import load_dotenv
+
+    load_dotenv()
+
+    APP_NAME = "ai_hedge_fund"
+    USER_ID = str(uuid4())
+    SESSION_ID = str(uuid4())
+
+    STOCKS = [
         # --- US TECH & GROWTH ---
         Ticker(name="Apple", trading212_ticker="AAPL", yfinance_ticker="AAPL"),
         Ticker(name="Microsoft", trading212_ticker="MSFT", yfinance_ticker="MSFT"),
@@ -52,3 +69,33 @@ if __name__ == "__main__":
         ),
         Ticker(name="National Grid", trading212_ticker="NG", yfinance_ticker="NG.L"),
     ]
+
+    TICKER = Ticker(name="Apple", trading212_ticker="AAPL", yfinance_ticker="AAPL")
+
+    session_service = InMemorySessionService()
+    session = asyncio.run(
+        session_service.create_session(
+            app_name=APP_NAME, session_id=SESSION_ID, user_id=USER_ID
+        )
+    )
+    runner = Runner(
+        agent=quants_orchestrator_agent,
+        app_name=APP_NAME,
+        session_service=session_service,
+    )
+
+    content = types.Content(
+        role="user", parts=[types.Part(text=TICKER.model_dump_json())]
+    )
+
+    events = runner.run(user_id=USER_ID, session_id=SESSION_ID, new_message=content)
+
+    for event in events:
+        if event.is_final_response() and event.content:
+            response = event.content.parts[0].text.strip()
+            logger.info(response)
+
+    # logger.info(session.state["fundamentals_agent_output"])
+    # logger.info(session.state["technicals_agent_output"])
+    # logger.info(session.state["growth_agent_output"])
+    # logger.info(session.state["valuations_agent_output"])
