@@ -129,3 +129,10 @@ class ValuationAgentOutput(BaseModel):
     assessment: str = Field(
         ..., description="Qualitative assessment of the current valuation"
     )
+
+
+class TickerDossier(BaseModel):
+    fundamentals: FundamentalsAgentOutput = Field(...)
+    technicals: TechnicalAgentOutput = Field(...)
+    growth: GrowthAgentOutput = Field(...)
+    valuations: ValuationAgentOutput = Field(...)
