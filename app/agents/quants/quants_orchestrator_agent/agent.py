@@ -1,26 +1,39 @@
-from google.adk.agents import ParallelAgent
+from google.adk.agents import ParallelAgent, SequentialAgent
 from google.genai import types
 
 from app.agents.quants.fundamentals_agent.agent import fundamentals_agent
 from app.agents.quants.technicals_agent.agent import technicals_agent
 from app.agents.quants.growth_agent.agent import growth_agent
 from app.agents.quants.valuations_agent.agent import valuations_agent
+from app.agents.quants.quants_aggregator_agent.agent import quants_aggregator_agent
 from app.models.quants_models import Ticker
 
 from loguru import logger
 
 # Note, needs a watch list to be fed in
 # TODO: Implement an algorithmic or AI strategy to dynamically choose these
-quants_orchestrator_agent = ParallelAgent(
-    name="quants_orchestrator_agent",
-    sub_agents=[fundamentals_agent, technicals_agent, growth_agent, valuations_agent],
+quants_parallel_agent = ParallelAgent(
+    name="quants_parallel_agent",
+    sub_agents=[
+        fundamentals_agent, 
+        technicals_agent, 
+        growth_agent, 
+        valuations_agent
+    ],
 )
 
-root_agent = quants_orchestrator_agent
+quants_orchestrator_agent = SequentialAgent(
+    name="quants_orchestrator_agent", 
+    sub_agents=[
+        quants_parallel_agent,
+        quants_aggregator_agent
+    ]
+)
 
 if __name__ == "__main__":
     from google.adk.runners import Runner
     from google.adk.sessions import InMemorySessionService
+    from google.adk.plugins import ReflectAndRetryToolPlugin
     from uuid import uuid4
     import asyncio
     from dotenv import load_dotenv
@@ -82,6 +95,7 @@ if __name__ == "__main__":
         agent=quants_orchestrator_agent,
         app_name=APP_NAME,
         session_service=session_service,
+        plugins=[ReflectAndRetryToolPlugin(max_retries=3)]
     )
 
     content = types.Content(
@@ -94,8 +108,3 @@ if __name__ == "__main__":
         if event.is_final_response() and event.content:
             response = event.content.parts[0].text.strip()
             logger.info(response)
-
-    # logger.info(session.state["fundamentals_agent_output"])
-    # logger.info(session.state["technicals_agent_output"])
-    # logger.info(session.state["growth_agent_output"])
-    # logger.info(session.state["valuations_agent_output"])
