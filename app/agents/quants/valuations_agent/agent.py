@@ -28,7 +28,7 @@ valuations_agent = LlmAgent(
     model=settings.REASONING_MODEL,
     description="A mathematical appraiser that calculates intrinsic value and relative pricing multiples like P/E, P/B, and PEG to determine if a stock is trading at a discount.",
     instruction=VALUATIONS_PROMPT,
-    planner=planner,
+    # planner=planner,
     tools=[
         get_info_by_ticker,
         get_historical_data,
