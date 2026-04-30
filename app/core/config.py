@@ -20,7 +20,7 @@ class Settings(BaseSettings):
     TRADING_212_API_SECRET: str = Field(alias="TRADING_212_API_SECRET")
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=".env.local",
         env_file_encoding="utf-8",
         extra="ignore",
     )

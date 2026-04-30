@@ -250,7 +250,7 @@ class Trading212Client:
 if __name__ == "__main__":
     from dotenv import load_dotenv
 
-    load_dotenv()
+    load_dotenv(".env.local")
 
     trading212_client = Trading212Client()
 
