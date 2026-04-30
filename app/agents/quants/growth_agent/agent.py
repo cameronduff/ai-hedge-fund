@@ -15,7 +15,6 @@ from app.tools.yfinance_tools import (
 planner = BuiltInPlanner(
     thinking_config=types.ThinkingConfig(
         include_thoughts=True,
-        thinking_budget=settings.LOW_THINKING_BUDGET,
         thinking_level=types.ThinkingLevel.HIGH,
     )
 )
