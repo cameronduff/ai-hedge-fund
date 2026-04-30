@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     REASONING_MODEL: str = Field(
         alias="REASONING_MODEL", default="gemini-3.1-pro-preview"
     )
+    FORMATTING_MODEL: str = Field(
+        alias="FORMATTING_MODEL", default="gemini-2.5-flash"
+    )
     LOW_THINKING_BUDGET: int = Field(default=1024, alias="LOW_THINKING_BUDGET")
     MEDIUM_THINKING_BUDGET: int = Field(default=4096, alias="MEDIUM_THINKING_BUDGET")
     HIGH_THINKING_BUDGET: int = Field(default=16384, alias="HIGH_THINKING_BUDGET")
