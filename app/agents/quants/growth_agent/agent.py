@@ -1,9 +1,9 @@
-from google.adk.agents import LlmAgent
+from google.adk.agents import LlmAgent, SequentialAgent
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
 from app.core.config import settings
-from app.agents.quants.growth_agent.prompt import GROWTH_PROMPT
+from app.agents.quants.growth_agent.prompt import GROWTH_PROMPT, GROWTH_FORMATTING_PROMPT
 
 from app.models.quants_models import Ticker, GrowthAgentOutput
 from app.tools.yfinance_tools import (
@@ -23,12 +23,12 @@ generate_content_config = types.GenerateContentConfig(
     temperature=0.2,
 )
 
-growth_agent = LlmAgent(
+growth_quant_agent = LlmAgent(
     name="growth_agent",
     model=settings.REASONING_MODEL,
     description="A forward-looking strategist that analyzes revenue expansion, Total Addressable Market (TAM), and analyst price targets to project future earnings trajectory.",
     instruction=GROWTH_PROMPT,
-    # planner=planner,
+    planner=planner,
     tools=[
         get_analyst_price_targets,
         get_info_by_ticker,
@@ -36,6 +36,21 @@ growth_agent = LlmAgent(
     ],
     generate_content_config=generate_content_config,
     input_schema=Ticker,
-    # output_schema=GrowthAgentOutput,
+    output_key="growth_agent_raw_output",
+)
+
+growth_formatter_agent = LlmAgent(
+    name="growth_formatter_agent",
+    model=settings.REASONING_MODEL,
+    instruction=GROWTH_FORMATTING_PROMPT,
+    output_schema=GrowthAgentOutput,
     output_key="growth_agent_output",
+)
+
+growth_agent = SequentialAgent(
+    name="growth_agent",
+    sub_agents=[
+        growth_quant_agent,
+        growth_formatter_agent,
+    ],
 )
