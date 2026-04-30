@@ -1,6 +1,28 @@
+from datetime import date, datetime
+
 from app.clients.yfinance_client import YFinanceClient
 
 yfinance_client = YFinanceClient()
+
+def _to_json_safe(value):
+    """Recursively convert values to JSON-serializable primitives."""
+    if isinstance(value, dict):
+        return {str(k): _to_json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple, set)):
+        return [_to_json_safe(v) for v in value]
+    if isinstance(value, (date, datetime)):
+        return value.isoformat()
+    if hasattr(value, "isoformat"):
+        try:
+            return value.isoformat()
+        except (TypeError, ValueError):
+            pass
+    if hasattr(value, "item"):
+        try:
+            return _to_json_safe(value.item())
+        except (ValueError, TypeError):
+            pass
+    return value
 
 
 def get_info_by_ticker(ticker: str):
@@ -11,7 +33,7 @@ def get_info_by_ticker(ticker: str):
     Args:
         ticker (str): The stock ticker symbol (e.g., 'AAPL', 'MSFT').
     """
-    return yfinance_client.get_info_by_ticker(ticker)
+    return _to_json_safe(yfinance_client.get_info_by_ticker(ticker))
 
 
 def get_balance_sheet_by_ticker(ticker: str):
@@ -22,7 +44,7 @@ def get_balance_sheet_by_ticker(ticker: str):
     Args:
         ticker (str): The stock ticker symbol (e.g., 'AAPL', 'MSFT').
     """
-    return yfinance_client.get_balance_sheet_by_ticker(ticker)
+    return yfinance_client.get_balance_sheet_by_ticker(ticker).to_json()
 
 
 def get_historical_data(ticker: str, period: str = "1mo"):
@@ -34,7 +56,7 @@ def get_historical_data(ticker: str, period: str = "1mo"):
         ticker (str): The stock ticker symbol.
         period (str): The time period to fetch data for. Valid periods: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max. Defaults to "1mo".
     """
-    return yfinance_client.get_historical_data(ticker, period)
+    return yfinance_client.get_historical_data(ticker, period).to_json()
 
 
 def get_options_chain(ticker: str):
@@ -45,7 +67,7 @@ def get_options_chain(ticker: str):
     Args:
         ticker (str): The stock ticker symbol (e.g., 'AAPL', 'MSFT').
     """
-    return yfinance_client.get_options_chain(ticker)
+    return yfinance_client.get_options_chain(ticker).to_json()
 
 
 def get_quarterly_income_statement(ticker: str):
@@ -56,7 +78,7 @@ def get_quarterly_income_statement(ticker: str):
     Args:
         ticker (str): The stock ticker symbol (e.g., 'AAPL', 'MSFT').
     """
-    return yfinance_client.get_quarterly_income_statement(ticker)
+    return yfinance_client.get_quarterly_income_statement(ticker).to_json()
 
 
 def get_calendar(ticker: str):
@@ -67,7 +89,7 @@ def get_calendar(ticker: str):
     Args:
         ticker (str): The stock ticker symbol (e.g., 'AAPL', 'MSFT').
     """
-    return yfinance_client.get_calendar(ticker)
+    return _to_json_safe(yfinance_client.get_calendar(ticker))
 
 
 def get_analyst_price_targets(ticker: str):
@@ -78,4 +100,13 @@ def get_analyst_price_targets(ticker: str):
     Args:
         ticker (str): The stock ticker symbol (e.g., 'AAPL', 'MSFT').
     """
-    return yfinance_client.get_analyst_price_targets(ticker)
+    return _to_json_safe(yfinance_client.get_analyst_price_targets(ticker))
+
+
+if __name__ == "__main__":
+    print(get_calendar("AAPL"))
+    print(type(get_calendar("AAPL")))
+    print(get_analyst_price_targets("AAPL"))
+    print(type(get_analyst_price_targets("AAPL")))
+    print(get_info_by_ticker("AAPL"))
+    print(type(get_info_by_ticker("AAPL")))
