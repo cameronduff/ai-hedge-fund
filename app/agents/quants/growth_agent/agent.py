@@ -28,7 +28,7 @@ growth_agent = LlmAgent(
     model=settings.REASONING_MODEL,
     description="A forward-looking strategist that analyzes revenue expansion, Total Addressable Market (TAM), and analyst price targets to project future earnings trajectory.",
     instruction=GROWTH_PROMPT,
-    planner=planner,
+    # planner=planner,
     tools=[
         get_analyst_price_targets,
         get_info_by_ticker,
@@ -36,6 +36,6 @@ growth_agent = LlmAgent(
     ],
     generate_content_config=generate_content_config,
     input_schema=Ticker,
-    output_schema=GrowthAgentOutput,
+    # output_schema=GrowthAgentOutput,
     output_key="growth_agent_output",
 )
