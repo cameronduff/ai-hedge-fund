@@ -7,10 +7,10 @@ from app.models.quants_models import FundamentalsAgentOutput, TechnicalAgentOutp
 
 class QuantsAggregatorAgent(BaseAgent):
     async def _run_async_impl(self, ctx):
-        fundamentals = FundamentalsAgentOutput.model_validate_json(ctx.session.state["fundamentals_agent_output"])
-        technicals = TechnicalAgentOutput.model_validate_json(ctx.session.state["technicals_agent_output"])
-        growth = GrowthAgentOutput.model_validate_json(ctx.session.state["growth_agent_output"])
-        valuations = ValuationAgentOutput.model_validate_json(ctx.session.state["valuations_agent_output"])
+        fundamentals = FundamentalsAgentOutput.model_validate(ctx.session.state["fundamentals_agent_output"])
+        technicals = TechnicalAgentOutput.model_validate(ctx.session.state["technicals_agent_output"])
+        growth = GrowthAgentOutput.model_validate(ctx.session.state["growth_agent_output"])
+        valuations = ValuationAgentOutput.model_validate(ctx.session.state["valuations_agent_output"])
 
         final = TickerDossier(
             fundamentals=fundamentals, 
@@ -26,7 +26,7 @@ class QuantsAggregatorAgent(BaseAgent):
                 parts=[types.Part(text=final.model_dump_json())]
             ),
             actions=EventActions(
-                state_detla={"quants_final_output": final.model_dump_json()}
+                state_delta={"quants_final_output": final.model_dump_json()}
             )
         )
 
