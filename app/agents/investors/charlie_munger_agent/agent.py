@@ -6,30 +6,32 @@ from app.core.config import settings
 from app.agents.investors.charlie_munger_agent.prompt import CHARLIE_MUNGER_PROMPT
 from app.agents.investors.investor_formatter_agent.agent import build_investor_formatter_agent
 
-planner = BuiltInPlanner(
-    thinking_config=types.ThinkingConfig(
-        include_thoughts=True,
-        thinking_level=types.ThinkingLevel.HIGH,
+
+def _build_persona() -> LlmAgent:
+    return LlmAgent(
+        name="charlie_munger_agent",
+        model=settings.REASONING_MODEL,
+        instruction=CHARLIE_MUNGER_PROMPT,
+        planner=BuiltInPlanner(
+            thinking_config=types.ThinkingConfig(
+                include_thoughts=True,
+                thinking_level=types.ThinkingLevel.HIGH,
+            )
+        ),
+        generate_content_config=types.GenerateContentConfig(temperature=0.3),
+        output_key="charlie_munger_persona_agent_output",
     )
-)
 
-generate_content_config = types.GenerateContentConfig(
-    temperature=0.3,
-)
 
-charlie_munger_persona_agent = LlmAgent(
-    name="charlie_munger_persona_agent",
-    model=settings.REASONING_MODEL,
-    instruction=CHARLIE_MUNGER_PROMPT,
-    output_key="charlie_munger_persona_agent_output",
-)
+def build_charlie_munger_agent() -> SequentialAgent:
+    return SequentialAgent(
+        name="charlie_munger_boardroom_agent",
+        sub_agents=[
+            _build_persona(),
+            build_investor_formatter_agent("charlie_munger"),
+        ],
+    )
 
-investor_formatter_agent = build_investor_formatter_agent("charlie_munger")
 
-charlie_munger_agent = SequentialAgent(
-    name="charlie_munger_agent",
-    sub_agents=[
-        charlie_munger_persona_agent, 
-        investor_formatter_agent
-    ],
-)
+def build_charlie_munger_debate_agent() -> LlmAgent:
+    return _build_persona()

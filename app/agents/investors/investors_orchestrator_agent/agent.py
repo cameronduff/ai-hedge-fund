@@ -1,42 +1,43 @@
 from google.adk.agents import ParallelAgent, SequentialAgent, LlmAgent
 
+from app.models.investors_models import CIOOutput
 from app.agents.investors.chief_investment_officer.agent import (
     chief_investment_officer_agent,
 )
-from app.agents.investors.aswath_damodaran_agent.agent import aswath_damodaran_agent
-from app.agents.investors.ben_graham_agent.agent import ben_graham_agent
-from app.agents.investors.bill_ackman_agent.agent import bill_ackman_agent
-from app.agents.investors.cathie_wood_agent.agent import cathie_wood_agent
-from app.agents.investors.charlie_munger_agent.agent import charlie_munger_agent
-from app.agents.investors.michael_burry_agent.agent import michael_burry_agent
-from app.agents.investors.monish_pabrai_agent.agent import monish_pabrai_agent
-from app.agents.investors.nassim_taleb_agent.agent import nassim_taleb_agent
-from app.agents.investors.peter_lynch_agent.agent import peter_lynch_agent
-from app.agents.investors.phil_fisher_agent.agent import phil_fisher_agent
+from app.agents.investors.aswath_damodaran_agent.agent import build_aswath_damodaran_agent
+from app.agents.investors.ben_graham_agent.agent import build_ben_graham_agent
+from app.agents.investors.bill_ackman_agent.agent import build_bill_ackman_agent
+from app.agents.investors.cathie_wood_agent.agent import build_cathie_wood_agent
+from app.agents.investors.charlie_munger_agent.agent import build_charlie_munger_agent
+from app.agents.investors.michael_burry_agent.agent import build_michael_burry_agent
+from app.agents.investors.monish_pabrai_agent.agent import build_monish_pabrai_agent
+from app.agents.investors.nassim_taleb_agent.agent import build_nassim_taleb_agent
+from app.agents.investors.peter_lynch_agent.agent import build_peter_lynch_agent
+from app.agents.investors.phil_fisher_agent.agent import build_phil_fisher_agent
 from app.agents.investors.rakesh_jhunjhunwala_agent.agent import (
-    rakesh_jhunjhunwala_agent,
+    build_rakesh_jhunjhunwala_agent,
 )
 from app.agents.investors.stanley_druckenmiller_agent.agent import (
-    stanley_druckenmiller_agent,
+    build_stanley_druckenmiller_agent,
 )
-from app.agents.investors.warren_buffet_agent.agent import warren_buffet_agent
+from app.agents.investors.warren_buffett_agent.agent import build_warren_buffett_agent
 
 investor_boardroom = ParallelAgent(
     name="investor_boardroom",
     sub_agents=[
-        aswath_damodaran_agent,
-        ben_graham_agent,
-        bill_ackman_agent,
-        cathie_wood_agent,
-        charlie_munger_agent,
-        michael_burry_agent,
-        monish_pabrai_agent,
-        nassim_taleb_agent,
-        peter_lynch_agent,
-        phil_fisher_agent,
-        rakesh_jhunjhunwala_agent,
-        stanley_druckenmiller_agent,
-        warren_buffet_agent,
+        build_aswath_damodaran_agent(),
+        build_ben_graham_agent(),
+        build_bill_ackman_agent(),
+        build_cathie_wood_agent(),
+        build_charlie_munger_agent(),
+        build_michael_burry_agent(),
+        build_monish_pabrai_agent(),
+        build_nassim_taleb_agent(),
+        build_peter_lynch_agent(),
+        build_phil_fisher_agent(),
+        build_rakesh_jhunjhunwala_agent(),
+        build_stanley_druckenmiller_agent(),
+        build_warren_buffett_agent(),
     ],
 )
 
@@ -175,6 +176,7 @@ if __name__=="__main__":
     events = runner.run(user_id=USER_ID, session_id=SESSION_ID, new_message=content)
 
     for event in events:
+        logger.info(f"[{event.author}] is_final={event.is_final_response()}")
         if event.is_final_response() and event.content:
             response = event.content.parts[0].text.strip()
             logger.info(response)
@@ -185,6 +187,8 @@ if __name__=="__main__":
         )
     )
 
-    chief_investment_officer_output = Dossier.model_validate_json(final_session.state["chief_investment_officer_output"])
+    cio_output = CIOOutput.model_validate(
+        final_session.state["chief_investment_officer_output"]
+    )
     logger.info("======================================================")
-    logger.info(chief_investment_officer_output)
+    logger.info(cio_output)
