@@ -1,1 +1,0 @@
-NEWS_SENTIMENT_PROMPT = """"""
