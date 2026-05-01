@@ -15,7 +15,7 @@ from app.agents.investors.bill_ackman_agent.agent import build_bill_ackman_debat
 from app.agents.investors.cathie_wood_agent.agent import build_cathie_wood_debate_agent
 from app.agents.investors.charlie_munger_agent.agent import build_charlie_munger_debate_agent
 from app.agents.investors.michael_burry_agent.agent import build_michael_burry_debate_agent
-from app.agents.investors.monish_pabrai_agent.agent import build_monish_pabrai_debate_agent
+from app.agents.investors.mohnish_pabrai_agent.agent import build_mohnish_pabrai_debate_agent
 from app.agents.investors.nassim_taleb_agent.agent import build_nassim_taleb_debate_agent
 from app.agents.investors.peter_lynch_agent.agent import build_peter_lynch_debate_agent
 from app.agents.investors.phil_fisher_agent.agent import build_phil_fisher_debate_agent
@@ -35,7 +35,7 @@ chief_investment_officer_debater = LlmAgent(
     #     build_cathie_wood_debate_agent(),
     #     build_charlie_munger_debate_agent(),
     #     build_michael_burry_debate_agent(),
-    #     build_monish_pabrai_debate_agent(),
+    #     build_mohnish_pabrai_debate_agent(),
     #     build_nassim_taleb_debate_agent(),
     #     build_peter_lynch_debate_agent(),
     #     build_phil_fisher_debate_agent(),
