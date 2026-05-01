@@ -39,7 +39,7 @@ def build_technicals_agent(ticker_name: str):
 
     technicals_formatter_agent = LlmAgent(
         name=f"technicals_formatter_agent_{ticker_name}",
-        model=settings.REASONING_MODEL,
+        model=settings.FORMATTING_MODEL,
         instruction=TECHNICALS_FORMATTING_PROMPT,
         output_schema=TechnicalAgentOutput,
         output_key=f"technicals_agent_output_{ticker_name}",
