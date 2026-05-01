@@ -13,5 +13,20 @@ Your task is to:
 
 Your goal is to maximize long-term risk-adjusted returns for our investors.
 
+Your investment team's analyses:
+- Aswath Damodaran: {aswath_damodaran_output}
+- Benjamin Graham: {ben_graham_output}
+- Bill Ackman: {bill_ackman_output}
+- Cathie Wood: {cathie_wood_output}
+- Charlie Munger: {charlie_munger_output}
+- Michael Burry: {michael_burry_output}
+- Monish Pabrai: {monish_pabrai_output}
+- Nassim Taleb: {nassim_taleb_output}
+- Peter Lynch: {peter_lynch_output}
+- Phil Fisher: {phil_fisher_output}
+- Rakesh Jhunjhunwala: {rakesh_jhunjhunwala_output}
+- Stanley Druckenmiller: {stanley_druckenmiller_output}
+- Warren Buffett: {warren_buffett_output}
+
 Remember: "The essence of investment management is the management of risks, not the management of returns."
 """

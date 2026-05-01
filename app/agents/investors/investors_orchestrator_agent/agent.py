@@ -47,6 +47,7 @@ investors_orchestrator_agent = SequentialAgent(
 
 if __name__=="__main__":
     from app.models.quants_models import Ticker, Dossier, TickerDossier, FundamentalsAgentOutput, FundamentalsMetrics, TechnicalAgentOutput, TechnicalMetrics, ValuationAgentOutput, ValuationMetrics, GrowthAgentOutput, GrowthMetrics
+    
     final_dossier=[
         TickerDossier(
             fundamentals=FundamentalsAgentOutput(
@@ -133,3 +134,57 @@ if __name__=="__main__":
                 valuation_status='Undervalued'), 
                 assessment='MSFT is currently trading at a compelling Forward P/E of 21.44, which is notably low for its historical growth profile and dominant market position. With a PEG ratio of 1.29 and a significant 38% discount to the analyst mean target of $570.72, the stock offers a robust margin of safety for a high-margin software leader.'))
             ]
+    
+    master_dossier = Dossier(final_dossier=final_dossier)
+
+    from google.adk.runners import Runner
+    from google.adk.sessions import InMemorySessionService
+    from google.adk.plugins import ReflectAndRetryToolPlugin
+    from uuid import uuid4
+    import asyncio
+    from dotenv import load_dotenv
+    from google.genai import types
+    from loguru import logger
+
+    load_dotenv(".env.local")
+
+    APP_NAME = "ai_hedge_fund"
+    USER_ID = str(uuid4())
+    SESSION_ID = str(uuid4())
+
+    session_service = InMemorySessionService()
+    session = asyncio.run(
+        session_service.create_session(
+            app_name=APP_NAME, 
+            session_id=SESSION_ID, 
+            user_id=USER_ID, 
+            state={"dossier": master_dossier.model_dump_json()},
+        )
+    )
+    runner = Runner(
+        agent=investors_orchestrator_agent,
+        app_name=APP_NAME,
+        session_service=session_service,
+        plugins=[ReflectAndRetryToolPlugin(max_retries=3)],
+    )
+
+    content = types.Content(
+        role="user", parts=[types.Part(text="Run quant analysis on watchlist.")]
+    )
+
+    events = runner.run(user_id=USER_ID, session_id=SESSION_ID, new_message=content)
+
+    for event in events:
+        if event.is_final_response() and event.content:
+            response = event.content.parts[0].text.strip()
+            logger.info(response)
+    
+    final_session = asyncio.run(
+        session_service.get_session(
+            app_name=APP_NAME, user_id=USER_ID, session_id=SESSION_ID
+        )
+    )
+
+    chief_investment_officer_output = Dossier.model_validate_json(final_session.state["chief_investment_officer_output"])
+    logger.info("======================================================")
+    logger.info(chief_investment_officer_output)
