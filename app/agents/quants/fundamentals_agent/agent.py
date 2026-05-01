@@ -47,7 +47,7 @@ def build_fundamentals_agent(ticker_name: str):
 
     fundamentals_formatter_agent = LlmAgent(
         name=f"fundamentals_formatter_agent_{ticker_name}",
-        model=settings.REASONING_MODEL,
+        model=settings.FORMATTING_MODEL,
         instruction=FUNDAMENTALS_FORMATTING_PROMPT,
         output_schema=FundamentalsAgentOutput,
         output_key=f"fundamentals_agent_output_{ticker_name}",

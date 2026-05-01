@@ -47,7 +47,7 @@ def build_valuations_agent(ticker_name: str):
 
     valuations_formatter_agent = LlmAgent(
         name=f"valuations_formatter_agent_{ticker_name}",
-        model=settings.REASONING_MODEL,
+        model=settings.FORMATTING_MODEL,
         instruction=VALUATIONS_FORMATTING_PROMPT,
         output_schema=ValuationAgentOutput,
         output_key=f"valuations_agent_output_{ticker_name}",
