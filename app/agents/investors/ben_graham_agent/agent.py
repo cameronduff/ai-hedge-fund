@@ -6,30 +6,32 @@ from app.core.config import settings
 from app.agents.investors.ben_graham_agent.prompt import BEN_GRAHAM_PROMPT
 from app.agents.investors.investor_formatter_agent.agent import build_investor_formatter_agent
 
-planner = BuiltInPlanner(
-    thinking_config=types.ThinkingConfig(
-        include_thoughts=True,
-        thinking_level=types.ThinkingLevel.HIGH,
+
+def _build_persona() -> LlmAgent:
+    return LlmAgent(
+        name="ben_graham_agent",
+        model=settings.REASONING_MODEL,
+        instruction=BEN_GRAHAM_PROMPT,
+        planner=BuiltInPlanner(
+            thinking_config=types.ThinkingConfig(
+                include_thoughts=True,
+                thinking_level=types.ThinkingLevel.HIGH,
+            )
+        ),
+        generate_content_config=types.GenerateContentConfig(temperature=0.3),
+        output_key="ben_graham_persona_agent_output",
     )
-)
 
-generate_content_config = types.GenerateContentConfig(
-    temperature=0.3,
-)
 
-ben_graham_persona_agent = LlmAgent(
-    name="ben_graham_persona_agent",
-    model=settings.REASONING_MODEL,
-    instruction=BEN_GRAHAM_PROMPT,
-    output_key="ben_graham_persona_agent_output",
-)
+def build_ben_graham_agent() -> SequentialAgent:
+    return SequentialAgent(
+        name="ben_graham_boardroom_agent",
+        sub_agents=[
+            _build_persona(),
+            build_investor_formatter_agent("ben_graham"),
+        ],
+    )
 
-investor_formatter_agent = build_investor_formatter_agent("ben_graham")
 
-ben_graham_agent = SequentialAgent(
-    name="ben_graham_agent",
-    sub_agents=[
-        ben_graham_persona_agent, 
-        investor_formatter_agent
-    ],
-)
+def build_ben_graham_debate_agent() -> LlmAgent:
+    return _build_persona()
