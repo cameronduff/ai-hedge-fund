@@ -26,7 +26,7 @@ def build_technicals_agent(ticker_name: str):
     )
 
     technicals_quant_agent = LlmAgent(
-        name=f"technicals_agent_{ticker_name}",
+        name=f"technicals_raw_agent_{ticker_name}",
         model=settings.REASONING_MODEL,
         description="A pattern-recognition expert focused on price action, momentum indicators, and volume trends to identify market entry and exit signals.",
         instruction=TECHNICALS_PROMPT,

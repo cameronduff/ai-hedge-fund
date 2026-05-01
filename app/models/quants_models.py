@@ -136,3 +136,6 @@ class TickerDossier(BaseModel):
     technicals: TechnicalAgentOutput = Field(...)
     growth: GrowthAgentOutput = Field(...)
     valuations: ValuationAgentOutput = Field(...)
+
+class Dossier(BaseModel):
+    final_dossier: List[TickerDossier]
