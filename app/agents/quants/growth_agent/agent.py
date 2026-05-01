@@ -47,7 +47,7 @@ def build_growth_agent(ticker_name: str):
 
     growth_formatter_agent = LlmAgent(
         name=f"growth_formatter_agent_{ticker_name}",
-        model=settings.REASONING_MODEL,
+        model=settings.FORMATTING_MODEL,
         instruction=GROWTH_FORMATTING_PROMPT,
         output_schema=GrowthAgentOutput,
         output_key=f"growth_agent_output_{ticker_name}",
