@@ -30,7 +30,7 @@ def build_valuations_agent(ticker_name: str):
     )
 
     valuations_quant_agent = LlmAgent(
-        name=f"valuations_agent_{ticker_name}",
+        name=f"valuations_raw_agent_{ticker_name}",
         model=settings.REASONING_MODEL,
         description="A mathematical appraiser that calculates intrinsic value and relative pricing multiples like P/E, P/B, and PEG to determine if a stock is trading at a discount.",
         instruction=VALUATIONS_PROMPT,

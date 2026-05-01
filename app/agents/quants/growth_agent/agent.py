@@ -30,7 +30,7 @@ def build_growth_agent(ticker_name: str):
     )
 
     growth_quant_agent = LlmAgent(
-        name=f"growth_agent_{ticker_name}",
+        name=f"growth_raw_agent_{ticker_name}",
         model=settings.REASONING_MODEL,
         description="A forward-looking strategist that analyzes revenue expansion, Total Addressable Market (TAM), and analyst price targets to project future earnings trajectory.",
         instruction=GROWTH_PROMPT,
