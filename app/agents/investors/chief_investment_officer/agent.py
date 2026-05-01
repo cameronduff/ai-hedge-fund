@@ -24,22 +24,8 @@ from app.agents.investors.stanley_druckenmiller_agent.agent import (
 from app.agents.investors.warren_buffet_agent.agent import warren_buffet_agent
 
 chief_investment_officer_agent = LlmAgent(
-    "chief_investment_officer_agent",
+    name="chief_investment_officer_agent",
     model=settings.REASONING_MODEL,
     instruction=CHIEF_INVESTMENT_OFFICER_PROMPT,
-    sub_agents=[
-        aswath_damodaran_agent,
-        ben_graham_agent,
-        bill_ackman_agent,
-        cathie_wood_agent,
-        charlie_munger_agent,
-        michael_burry_agent,
-        monish_pabrai_agent,
-        nassim_taleb_agent,
-        peter_lynch_agent,
-        phil_fisher_agent,
-        rakesh_jhunjhunwala_agent,
-        stanley_druckenmiller_agent,
-        warren_buffet_agent,
-    ],
+    output_key="chief_investment_officer_output"
 )
