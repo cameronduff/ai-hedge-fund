@@ -18,7 +18,7 @@ YOUR BOARD'S INDEPENDENT ANALYSES:
 - Cathie Wood (Disruptive Innovation / Hypergrowth): {cathie_wood_agent_output}
 - Charlie Munger (Quality Compounder / Mental Models): {charlie_munger_agent_output}
 - Michael Burry (Deep Contrarian / Systemic Risk): {michael_burry_agent_output}
-- Mohnish Pabrai (Asymmetric Value / Dhandho): {monish_pabrai_agent_output}
+- Mohnish Pabrai (Asymmetric Value / Dhandho): {mohnish_pabrai_agent_output}
 - Nassim Taleb (Antifragility / Tail Risk): {nassim_taleb_agent_output}
 - Peter Lynch (GARP / Common Sense Growth): {peter_lynch_agent_output}
 - Phil Fisher (Quality Growth / Management Focus): {phil_fisher_agent_output}
