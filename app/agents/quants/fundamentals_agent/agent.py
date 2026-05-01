@@ -30,7 +30,7 @@ def build_fundamentals_agent(ticker_name: str):
     )
 
     fundamentals_quant_agent = LlmAgent(
-        name=f"fundamentals_agent_{ticker_name}",
+        name=f"fundamentals_raw_agent_{ticker_name}",
         model=settings.REASONING_MODEL,
         description="A rigorous accounting specialist that dissects balance sheets and income statements to verify financial health, debt levels, and operational efficiency.",
         instruction=FUNDAMENTALS_PROMPT,
