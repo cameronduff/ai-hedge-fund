@@ -94,7 +94,7 @@ class Trading212Client:
             auth = (self.username, self.password)
 
             response = requests.post(
-                url, json=payload.model_dump_json(), headers=headers, auth=auth
+                url, json=payload.model_dump(), headers=headers, auth=auth
             )
             data = response.json()
 
@@ -119,7 +119,7 @@ class Trading212Client:
 
             response = requests.post(
                 url,
-                json=payload.model_dump_json(),
+                json=payload.model_dump(),
                 headers=headers,
                 auth=auth,
             )
@@ -146,7 +146,7 @@ class Trading212Client:
 
             response = requests.post(
                 url,
-                json=payload.model_dump_json(),
+                json=payload.model_dump(),
                 headers=headers,
                 auth=auth,
             )
@@ -173,7 +173,7 @@ class Trading212Client:
 
             response = requests.post(
                 url,
-                json=payload.model_dump_json(),
+                json=payload.model_dump(),
                 headers=headers,
                 auth=auth,
             )
