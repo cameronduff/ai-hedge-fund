@@ -46,12 +46,17 @@ def get_all_available_instruments() -> dict:
     return trading212_client.get_all_available_instruments()
 
 
-def fetch_all_open_positions() -> dict:
+def fetch_all_open_positions(query: dict | None = None) -> dict:
     """
-    Retrieves a list of all currently open positions (owned assets) in the portfolio.
-    Use this to check current holdings, average buy prices, quantities, and current profitability.
+    Fetches all currently open positions in the portfolio.
+    Use this to see existing holdings, average buy prices, current values, 
+    and unrealised P&L.
+
+    Args:
+        query (dict, optional): Optional filter parameters. Pass None to 
+        retrieve all open positions.
     """
-    return trading212_client.fetch_all_open_positions()
+    return trading212_client.fetch_all_open_positions(query)
 
 
 # Execution tools
