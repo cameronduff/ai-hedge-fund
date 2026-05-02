@@ -1,5 +1,7 @@
 from google.adk.agents import LlmAgent, SequentialAgent
 from google.adk.agents.callback_context import CallbackContext
+from google.adk.planners import BuiltInPlanner
+from google.adk.tools.agent_tool import AgentTool
 from google.genai import types
 
 from app.core.config import settings
@@ -28,22 +30,29 @@ chief_investment_officer_debater = LlmAgent(
     name="chief_investment_officer_debater",
     model=settings.REASONING_MODEL,
     instruction=CHIEF_INVESTMENT_OFFICER_PROMPT,
-    # sub_agents=[
-    #     build_aswath_damodaran_debate_agent(),
-    #     build_ben_graham_debate_agent(),
-    #     build_bill_ackman_debate_agent(),
-    #     build_cathie_wood_debate_agent(),
-    #     build_charlie_munger_debate_agent(),
-    #     build_michael_burry_debate_agent(),
-    #     build_mohnish_pabrai_debate_agent(),
-    #     build_nassim_taleb_debate_agent(),
-    #     build_peter_lynch_debate_agent(),
-    #     build_phil_fisher_debate_agent(),
-    #     build_rakesh_jhunjhunwala_debate_agent(),
-    #     build_stanley_druckenmiller_debate_agent(),
-    #     build_warren_buffett_debate_agent(),
-    # ],
+    planner=BuiltInPlanner(
+        thinking_config=types.ThinkingConfig(
+            include_thoughts=True,
+            thinking_level=types.ThinkingLevel.HIGH,
+        )
+    ),
+    tools=[
+        AgentTool(agent=build_aswath_damodaran_debate_agent()),
+        AgentTool(agent=build_ben_graham_debate_agent()),
+        AgentTool(agent=build_bill_ackman_debate_agent()),
+        AgentTool(agent=build_cathie_wood_debate_agent()),
+        AgentTool(agent=build_charlie_munger_debate_agent()),
+        AgentTool(agent=build_michael_burry_debate_agent()),
+        AgentTool(agent=build_mohnish_pabrai_debate_agent()),
+        AgentTool(agent=build_nassim_taleb_debate_agent()),
+        AgentTool(agent=build_peter_lynch_debate_agent()),
+        AgentTool(agent=build_phil_fisher_debate_agent()),
+        AgentTool(agent=build_rakesh_jhunjhunwala_debate_agent()),
+        AgentTool(agent=build_stanley_druckenmiller_debate_agent()),
+        AgentTool(agent=build_warren_buffett_debate_agent()),
+    ],
     output_key="chief_investment_officer_debate_output",
+    generate_content_config=types.GenerateContentConfig(temperature=0.0),
 )
 
 chief_investment_officer_formatter = LlmAgent(
