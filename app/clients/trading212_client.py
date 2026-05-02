@@ -140,7 +140,7 @@ class Trading212Client:
             url = "https://demo.trading212.com/api/v0/equity/orders/stop"
             headers = {
                 "Content-Type": CONTENT_TYPE,
-                "Authorization": "YOUR_API_KEY_HERE",
+                "Authorization": self.api_key,
             }
             auth = (self.username, self.password)
 

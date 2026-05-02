@@ -4,7 +4,8 @@ import json
 
 
 class LimitOrderPayload(BaseModel):
-    extendedHours: bool = Field(False, gt=0)
+    limitPrice: float = Field(..., gt=0)
+    extendedHours: bool = Field(False)
     quantity: float = Field(..., gt=0)
     ticker: str = Field(...)
 
