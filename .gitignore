@@ -6,3 +6,5 @@ ai-hedge-fund.json
 ai_hedge_fund.json
 .codex
 .env.local
+outputs/dossier.json
+outputs/cio_output.json
