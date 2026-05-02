@@ -20,7 +20,17 @@ def _build_persona() -> LlmAgent:
                 thinking_level=types.ThinkingLevel.HIGH,
             )
         ),
-        generate_content_config=types.GenerateContentConfig(temperature=0.3),
+        generate_content_config=types.GenerateContentConfig(
+            temperature=0.3,
+            http_options=types.HttpOptions(
+                retry_options=types.HttpRetryOptions(
+                    attempts=5,
+                    initial_delay=10.0,
+                    max_delay=360.0,
+                    multiplier=2.0,
+                )
+            ),
+        ),
         output_key="rakesh_jhunjhunwala_persona_agent_output",
     )
 

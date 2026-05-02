@@ -28,7 +28,17 @@ portfolio_manager = LlmAgent(
             thinking_level=types.ThinkingLevel.HIGH,
         )
     ),
-    generate_content_config=types.GenerateContentConfig(temperature=0.0),
+    generate_content_config=types.GenerateContentConfig(
+        temperature=0.0,
+        http_options=types.HttpOptions(
+            retry_options=types.HttpRetryOptions(
+                attempts=5,
+                initial_delay=10.0,
+                max_delay=360.0,
+                multiplier=2.0,
+            )
+        ),
+    ),
     tools=[
         fetch_all_open_positions, 
         get_account_summary,
@@ -47,7 +57,18 @@ porfolio_manager_formatter_agent = LlmAgent(
     model=settings.FORMATTING_MODEL,
     instruction=PORTFOLIO_MANAGER_FORMATTER_PROMPT,
     output_schema=PortfolioManagerOutput,
-    output_key="portfolio_manager_output"
+    output_key="portfolio_manager_output",
+    generate_content_config=types.GenerateContentConfig(
+        temperature=0.2,
+        http_options=types.HttpOptions(
+            retry_options=types.HttpRetryOptions(
+                attempts=5,
+                initial_delay=10.0,
+                max_delay=360.0,
+                multiplier=2.0,
+            )
+        ),
+    ),
 )
 
 portfolio_manager_agent = SequentialAgent(
