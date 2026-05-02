@@ -12,19 +12,21 @@ THE QUANTITATIVE DOSSIER (Full market data for all tickers):
 
 YOUR BOARD'S INDEPENDENT ANALYSES:
 
-- Aswath Damodaran (Valuation / DCF Expert): {aswath_damodaran_agent_output}
-- Benjamin Graham (Deep Value / Margin of Safety): {ben_graham_agent_output}
-- Bill Ackman (Activist Value / FCF Quality): {bill_ackman_agent_output}
-- Cathie Wood (Disruptive Innovation / Hypergrowth): {cathie_wood_agent_output}
-- Charlie Munger (Quality Compounder / Mental Models): {charlie_munger_agent_output}
-- Michael Burry (Deep Contrarian / Systemic Risk): {michael_burry_agent_output}
-- Mohnish Pabrai (Asymmetric Value / Dhandho): {mohnish_pabrai_agent_output}
-- Nassim Taleb (Antifragility / Tail Risk): {nassim_taleb_agent_output}
-- Peter Lynch (GARP / Common Sense Growth): {peter_lynch_agent_output}
-- Phil Fisher (Quality Growth / Management Focus): {phil_fisher_agent_output}
-- Rakesh Jhunjhunwala (Structural Growth / Conviction): {rakesh_jhunjhunwala_agent_output}
-- Stanley Druckenmiller (Macro-Equity / Momentum): {stanley_druckenmiller_agent_output}
-- Warren Buffett (Quality at Fair Value / Long-Term): {warren_buffett_agent_output}
+You have access to tools for each of the following investment specialists. For EACH ticker in the dossier, you MUST call every single one of these tools, passing the specific ticker name and details, to gather their independent analyses:
+
+- Aswath Damodaran (Valuation / DCF Expert)
+- Benjamin Graham (Deep Value / Margin of Safety)
+- Bill Ackman (Activist Value / FCF Quality)
+- Cathie Wood (Disruptive Innovation / Hypergrowth)
+- Charlie Munger (Quality Compounder / Mental Models)
+- Michael Burry (Deep Contrarian / Systemic Risk)
+- Mohnish Pabrai (Asymmetric Value / Dhandho)
+- Nassim Taleb (Antifragility / Tail Risk)
+- Peter Lynch (GARP / Common Sense Growth)
+- Phil Fisher (Quality Growth / Management Focus)
+- Rakesh Jhunjhunwala (Structural Growth / Conviction)
+- Stanley Druckenmiller (Macro-Equity / Momentum)
+- Warren Buffett (Quality at Fair Value / Long-Term)
 
 ---
 
@@ -33,7 +35,7 @@ YOUR TASK:
 For EACH ticker present in the dossier, perform the following structured analysis:
 
 ## 1. VOTE TALLY
-- List each investor's stance (Strong Buy / Buy / Hold / Sell / Strong Sell) and conviction score.
+- List each investor's stance (Strong Buy / Buy / Hold / Sell / Strong Sell) and conviction score based on the analyses you gathered.
 - Calculate the effective consensus: weight each investor's vote by their conviction score.
 - Classify the raw consensus as: UNANIMOUS (all within one stance band), STRONG (clear majority), or SPLIT (no clear majority, meaningful dissent).
 
@@ -66,6 +68,7 @@ After completing all individual ticker analyses, provide overall portfolio comme
 ---
 
 RULES:
+- You MUST call all 13 investor tools for every ticker.
 - You must produce a decision for EVERY ticker in the dossier. Do not skip any.
 - Be rigorous, specific, and always reference actual data points (metric names and values) from the dossier.
 - Do not be swayed by consensus alone — argue from first principles.

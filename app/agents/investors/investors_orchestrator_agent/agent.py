@@ -1,52 +1,16 @@
-from google.adk.agents import ParallelAgent, SequentialAgent, LlmAgent
+from google.adk.agents import SequentialAgent
 
-from app.models.investors_models import CIOOutput
 from app.agents.investors.chief_investment_officer.agent import (
     chief_investment_officer_agent,
-)
-from app.agents.investors.aswath_damodaran_agent.agent import build_aswath_damodaran_agent
-from app.agents.investors.ben_graham_agent.agent import build_ben_graham_agent
-from app.agents.investors.bill_ackman_agent.agent import build_bill_ackman_agent
-from app.agents.investors.cathie_wood_agent.agent import build_cathie_wood_agent
-from app.agents.investors.charlie_munger_agent.agent import build_charlie_munger_agent
-from app.agents.investors.michael_burry_agent.agent import build_michael_burry_agent
-from app.agents.investors.mohnish_pabrai_agent.agent import build_mohnish_pabrai_agent
-from app.agents.investors.nassim_taleb_agent.agent import build_nassim_taleb_agent
-from app.agents.investors.peter_lynch_agent.agent import build_peter_lynch_agent
-from app.agents.investors.phil_fisher_agent.agent import build_phil_fisher_agent
-from app.agents.investors.rakesh_jhunjhunwala_agent.agent import (
-    build_rakesh_jhunjhunwala_agent,
-)
-from app.agents.investors.stanley_druckenmiller_agent.agent import (
-    build_stanley_druckenmiller_agent,
-)
-from app.agents.investors.warren_buffett_agent.agent import build_warren_buffett_agent
-
-investor_boardroom = ParallelAgent(
-    name="investor_boardroom",
-    sub_agents=[
-        build_aswath_damodaran_agent(),
-        build_ben_graham_agent(),
-        build_bill_ackman_agent(),
-        build_cathie_wood_agent(),
-        build_charlie_munger_agent(),
-        build_michael_burry_agent(),
-        build_mohnish_pabrai_agent(),
-        build_nassim_taleb_agent(),
-        build_peter_lynch_agent(),
-        build_phil_fisher_agent(),
-        build_rakesh_jhunjhunwala_agent(),
-        build_stanley_druckenmiller_agent(),
-        build_warren_buffett_agent(),
-    ],
 )
 
 investors_orchestrator_agent = SequentialAgent(
     name="investors_orchestrator_agent",
-    sub_agents=[investor_boardroom, chief_investment_officer_agent],
+    sub_agents=[chief_investment_officer_agent],
 )
 
 if __name__=="__main__":
+    from app.models.investors_models import CIOOutput
     from app.models.quants_models import Ticker, Dossier, TickerDossier, FundamentalsAgentOutput, FundamentalsMetrics, TechnicalAgentOutput, TechnicalMetrics, ValuationAgentOutput, ValuationMetrics, GrowthAgentOutput, GrowthMetrics
     
     final_dossier=[
