@@ -18,8 +18,8 @@ from app.tools.calculation_tools import (
 )
 from app.models.management_models import PortfolioManagerOutput
 
-portfolio_manager_agent = LlmAgent(
-    name="portfolio_manager_agent",
+portfolio_manager = LlmAgent(
+    name="portfolio_manager",
     model=settings.REASONING_MODEL,
     instruction=PORTFOLIO_MANAGER_PROMPT,
     planner=BuiltInPlanner(
@@ -50,10 +50,10 @@ porfolio_manager_formatter_agent = LlmAgent(
     output_key="portfolio_manager_output"
 )
 
-portfolio_manager = SequentialAgent(
-    name="portfolio_manager",
+portfolio_manager_agent = SequentialAgent(
+    name="portfolio_manager_agent",
     sub_agents=[
-        portfolio_manager_agent,
+        portfolio_manager,
         porfolio_manager_formatter_agent
     ]
 )
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     )
 
     runner = Runner(
-        agent=portfolio_manager,
+        agent=portfolio_manager_agent,
         app_name=APP_NAME,
         session_service=session_service,
         plugins=[ReflectAndRetryToolPlugin(max_retries=3)],
