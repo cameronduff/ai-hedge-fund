@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from google.genai import types
 from loguru import logger
 
+from app.runner.runner import run_stage
 from app.models.quants_models import Ticker, Dossier
 from app.models.investors_models import CIOOutput
 from app.models.management_models import PortfolioManagerOutput
@@ -39,31 +40,6 @@ STOCKS = [
 
 session_service = InMemorySessionService()
 
-def run_stage(runner: Runner, session_id: str, message: str) -> dict:
-    content = types.Content(
-        role="user",
-        parts=[types.Part(text=message)]
-    )
-    events = runner.run(
-        user_id=USER_ID,
-        session_id=session_id,
-        new_message=content,
-    )
-    for event in events:
-        logger.info(f"  [{event.author}] is_final={event.is_final_response()} content={bool(event.content)}")
-        if event.is_final_response() and event.content:
-            logger.info(f"  >> {event.content.parts[0].text.strip()[:150]}")
-
-    final_session = asyncio.run(
-        session_service.get_session(
-            app_name=APP_NAME,
-            user_id=USER_ID,
-            session_id=session_id,
-        )
-    )
-    logger.info(f"  State keys: {list(final_session.state.keys())}")
-    return final_session.state
-
 # =========================================================
 # STAGE 1: QUANTS
 # =========================================================
@@ -83,7 +59,10 @@ runner_quants = Runner(
 )
 
 state_1 = run_stage(
+    APP_NAME,
+    USER_ID,
     runner_quants,
+    session_service,
     session_id_1,
     f"Run quant analysis on watchlist: {[t.model_dump() for t in STOCKS]}",
 )
@@ -114,7 +93,10 @@ runner_investors = Runner(
 )
 
 state_2 = run_stage(
+    APP_NAME,
+    USER_ID,
     runner_investors,
+    session_service
     session_id_2,
     "Review the dossier and produce investment recommendations.",
 )
@@ -145,7 +127,10 @@ runner_portfolio = Runner(
 )
 
 state_3 = run_stage(
+    APP_NAME,
+    USER_ID,
     runner_portfolio,
+    session_service,
     session_id_3,
     "Review the CIO recommendations and manage the portfolio accordingly.",
 )
