@@ -96,7 +96,7 @@ state_2 = run_stage(
     APP_NAME,
     USER_ID,
     runner_investors,
-    session_service
+    session_service,
     session_id_2,
     "Review the dossier and produce investment recommendations.",
 )
