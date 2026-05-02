@@ -20,7 +20,7 @@ def build_investor_formatter_agent(investor_name: str):
                     attempts=5,
                     initial_delay=10.0,
                     max_delay=360.0,
-                    multiplier=2.0,
+                    exp_base=2.0,
                 )
             ),
         ),
