@@ -32,7 +32,7 @@ The Investors represent the "Board of Directors." These agents are injected with
 
 The Management tier governs the workflow, resolves conflicting opinions from the Investors, and applies strict constraints before any trades are proposed.
 
-- **`chief_of_staff_agent.py`**: The orchestrator. It manages the state, passes the ticker to the Quants, formats the dossier, and triggers the Investors.
+- **`quants_orchestrator_agent` & `investors_orchestrator_agent`**: These orchestrators manage the state transitions between phases, dispatching quants to build dossiers and triggering the investor boardroom.
 - **`portfolio_manager_agent.py`**: Aggregates the signals from the Investors. If there is a split vote, the PM breaks the tie based on current macro conditions and proposes a specific trade block (e.g., "Buy 5 shares of MSFT").
 - **`risk_manager_agent.py`**: The ultimate gatekeeper. It checks the PM's proposal against current account balances, portfolio weighting, and volatility metrics. It has absolute power to **Approve**, **Modify**, or **Reject** the trade.
 
@@ -40,12 +40,12 @@ The Management tier governs the workflow, resolves conflicting opinions from the
 
 ## 🔄 The Agent Lifecycle (Run Loop)
 
-When `runner.py` initiates a ticker evaluation, the flow of data is strictly linear:
+When `main.py` initiates a ticker evaluation, the flow of data is strictly linear:
 
-1. **Orchestration:** `chief_of_staff_agent` receives the target ticker.
-2. **Fact Gathering:** `chief_of_staff_agent` dispatches the `/quants` to fetch data via `app/tools/`.
+1. **Orchestration:** `quants_orchestrator_agent` receives the target ticker.
+2. **Fact Gathering:** Quants are dispatched to fetch data via `app/tools/`.
 3. **Synthesis:** The Quants' outputs are compiled into a single Master Dossier.
-4. **Debate:** The Master Dossier is broadcast to the `/investors` in parallel.
+4. **Boardroom:** The `investors_orchestrator_agent` broadcasts the Master Dossier to the individual `/investors`.
 5. **Consensus:** The `/investors` return their individual votes to the `portfolio_manager_agent`, which proposes a final trade.
 6. **Veto/Approval:** The `risk_manager_agent` reviews the proposed trade against the Trading 212 account balance and outputs a finalized JSON payload.
 
