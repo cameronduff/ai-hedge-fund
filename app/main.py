@@ -15,6 +15,12 @@ from app.models.management_models import PortfolioManagerOutput
 from app.agents.quants.quants_orchestrator_agent.agent import quants_orchestrator_agent
 from app.agents.investors.investors_orchestrator_agent.agent import investors_orchestrator_agent
 from app.agents.management.portfolio_manager_agent.agent import portfolio_manager_agent
+from app.clients.trading212_client import Trading212Client
+from app.models.trading212_models import (
+    MarketOrderPayload,
+    LimitOrderPayload,
+    StopLimitOrderPayload,
+)
 
 load_dotenv(".env.local")
 
@@ -210,6 +216,70 @@ if portfolio_output.deferred_instructions:
 
 logger.info(f"\nSummary:     {portfolio_output.portfolio_summary}")
 logger.info(f"Next Review: {portfolio_output.next_review_trigger}")
+
+# =========================================================
+# STAGE 4: TRADE EXECUTION
+# =========================================================
+logger.info("=" * 60)
+logger.info("STAGE 4: TRADE EXECUTION")
+logger.info("=" * 60)
+
+trading212_client = Trading212Client()
+
+if portfolio_output.instructions:
+    for instruction in portfolio_output.instructions:
+        if not instruction.risk_approved:
+            logger.warning(f"Skipping trade for {instruction.trading212_ticker}: Not risk approved by Risk Manager.")
+            continue
+        
+        if instruction.action == "HOLD":
+            continue
+
+        # Adjust quantity for Sell/Reduce (assuming negative for sell in T212 API)
+        quantity = instruction.quantity
+        if instruction.action in ["SELL", "REDUCE"] and quantity > 0:
+            quantity = -quantity
+        elif instruction.action in ["BUY", "ADD"] and quantity < 0:
+            quantity = -quantity
+        
+        logger.info(f"Executing {instruction.action} {abs(quantity)} x {instruction.trading212_ticker} via {instruction.order_type}...")
+        
+        try:
+            if instruction.order_type == "MARKET":
+                # MarketOrderPayload in this project requires a limitPrice > 0
+                payload = MarketOrderPayload(
+                    limitPrice=instruction.limit_price or 0.01, 
+                    quantity=quantity,
+                    ticker=instruction.trading212_ticker,
+                    timeValidity=instruction.time_validity
+                )
+                result = trading212_client.place_market_order(payload)
+            elif instruction.order_type == "LIMIT":
+                payload = LimitOrderPayload(
+                    limitPrice=instruction.limit_price,
+                    quantity=quantity,
+                    ticker=instruction.trading212_ticker,
+                    extendedHours=instruction.extended_hours
+                )
+                result = trading212_client.place_limit_order(payload)
+            elif instruction.order_type == "STOP_LIMIT":
+                payload = StopLimitOrderPayload(
+                    limitPrice=instruction.limit_price,
+                    stopPrice=instruction.stop_price,
+                    quantity=quantity,
+                    ticker=instruction.trading212_ticker,
+                    timeValidity=instruction.time_validity
+                )
+                result = trading212_client.place_stop_limit_order(payload)
+            else:
+                logger.error(f"Unsupported order type: {instruction.order_type}")
+                continue
+            
+            logger.info(f"Successfully placed order for {instruction.trading212_ticker}. Result: {result}")
+        except Exception as e:
+            logger.error(f"Failed to execute trade for {instruction.trading212_ticker}: {e}")
+else:
+    logger.info("No trade instructions to execute.")
 
 # =========================================================
 # CLEANUP
