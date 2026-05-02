@@ -23,6 +23,14 @@ def build_technicals_agent(ticker_name: str):
 
     generate_content_config = types.GenerateContentConfig(
         temperature=0.2,
+        http_options=types.HttpOptions(
+            retry_options=types.HttpRetryOptions(
+                attempts=5,
+                initial_delay=10.0,
+                max_delay=360.0,
+                multiplier=2.0,
+            )
+        ),
     )
 
     technicals_quant_agent = LlmAgent(
@@ -41,6 +49,7 @@ def build_technicals_agent(ticker_name: str):
         name=f"technicals_formatter_agent_{ticker_name}",
         model=settings.FORMATTING_MODEL,
         instruction=TECHNICALS_FORMATTING_PROMPT,
+        generate_content_config=generate_content_config,
         output_schema=TechnicalAgentOutput,
         output_key=f"technicals_agent_output_{ticker_name}",
     )

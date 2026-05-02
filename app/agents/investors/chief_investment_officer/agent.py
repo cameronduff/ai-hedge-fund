@@ -52,7 +52,17 @@ chief_investment_officer_debater = LlmAgent(
         AgentTool(agent=build_warren_buffett_debate_agent()),
     ],
     output_key="chief_investment_officer_debate_output",
-    generate_content_config=types.GenerateContentConfig(temperature=0.0),
+    generate_content_config=types.GenerateContentConfig(
+        temperature=0.0,
+        http_options=types.HttpOptions(
+            retry_options=types.HttpRetryOptions(
+                attempts=5,
+                initial_delay=10.0,
+                max_delay=360.0,
+                multiplier=2.0,
+            )
+        ),
+    ),
 )
 
 chief_investment_officer_formatter = LlmAgent(
@@ -61,6 +71,17 @@ chief_investment_officer_formatter = LlmAgent(
     instruction=CHIEF_INVESTMENT_OFFICER_FORMATTING_PROMPT,
     output_schema=CIOOutput,
     output_key="chief_investment_officer_output",
+    generate_content_config=types.GenerateContentConfig(
+        temperature=0.2,
+        http_options=types.HttpOptions(
+            retry_options=types.HttpRetryOptions(
+                attempts=5,
+                initial_delay=10.0,
+                max_delay=360.0,
+                multiplier=2.0,
+            )
+        ),
+    ),
 )
 
 chief_investment_officer_agent = SequentialAgent(
