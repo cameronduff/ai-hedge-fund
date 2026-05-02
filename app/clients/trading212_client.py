@@ -46,7 +46,7 @@ class Trading212Client:
         except Exception as err:
             logger.error(f"An unrelated error occurred: {err}")
 
-    def fetch_all_open_positions(self, query):
+    def fetch_all_open_positions(self, query=None):
         try:
             url = "https://demo.trading212.com/api/v0/equity/positions"
 
