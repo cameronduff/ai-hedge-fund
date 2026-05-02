@@ -13,6 +13,17 @@ def build_investor_formatter_agent(investor_name: str):
         instruction=INVESTOR_FORMATTING_PROMPT,
         output_schema=InvestorResponse,
         output_key=f"{investor_name}_agent_output",
+        generate_content_config=types.GenerateContentConfig(
+            temperature=0.2,
+            http_options=types.HttpOptions(
+                retry_options=types.HttpRetryOptions(
+                    attempts=5,
+                    initial_delay=10.0,
+                    max_delay=360.0,
+                    multiplier=2.0,
+                )
+            ),
+        ),
     )
 
     return investor_formatter_agent

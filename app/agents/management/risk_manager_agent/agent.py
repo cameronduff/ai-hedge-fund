@@ -25,7 +25,17 @@ risk_manager_agent = LlmAgent(
             thinking_level=types.ThinkingLevel.HIGH,
         )
     ),
-    generate_content_config=types.GenerateContentConfig(temperature=0.1),
+    generate_content_config=types.GenerateContentConfig(
+        temperature=0.1,
+        http_options=types.HttpOptions(
+            retry_options=types.HttpRetryOptions(
+                attempts=5,
+                initial_delay=10.0,
+                max_delay=360.0,
+                multiplier=2.0,
+            )
+        ),
+    ),
     tools=[
         get_account_summary, 
         fetch_all_open_positions, 
