@@ -2,18 +2,33 @@
 
 Welcome to the **AI Hedge Fund**, a sophisticated multi-agent system designed to automate equity research, investment debate, and trade execution. 
 
-Instead of relying on a single monolithic AI, this platform utilizes a **Mixture of Experts (MoE)** architecture. It breaks down the complex task of "investing" into discrete, specialized roles—from quantitative analysis to philosophical investment debate—culminating in a deterministic execution layer.
+This project is inspired by the excellent work of [Virat Singh](https://github.com/virattt/ai-hedge-fund). It re-imagines the original concept using the **Google Agent Developer Kit (ADK)** and the **Gemini 2.0** suite of models to create a highly scalable, type-safe, and robust investment pipeline.
 
 ---
 
-## 🏛 Architecture Overview
+## 🏛 The Multi-Phase Pipeline
 
-The system operates in four distinct phases:
+Instead of a single prompt, the fund operates through a strictly linear, four-phase pipeline:
 
-1.  **Phase 1: Quant Analysis:** Specialized agents (`fundamentals`, `technicals`, `growth`, `valuations`) gather raw data via Yahoo Finance to build a factual "Master Dossier."
-2.  **Phase 2: Investor Boardroom:** A diverse group of "Persona Agents" (Buffett, Graham, Burry, Wood, etc.) reviews the dossier and provides independent ratings and rationales.
-3.  **Phase 3: Portfolio Management:** The `Chief Investment Officer` and `Portfolio Manager` aggregate these opinions, break ties, and propose specific trade blocks.
-4.  **Phase 4: Risk & Execution:** The `Risk Manager` validates proposals against account balances and volatility. Approved trades are then deterministically executed via the **Trading 212 API**.
+### Phase 1: Quantitative Analysis (The Quants)
+The Quants are the data analysts. Their sole purpose is to build a standardized, factual "Master Dossier" using tools like `yfinance`.
+- **Technicals:** Analyzes price action, RSI, MACD, and moving averages.
+- **Fundamentals:** Dissects balance sheets, income statements, and cash flows.
+- **Valuations:** Calculates intrinsic value using DCF, P/E, and PEG ratios.
+- **Growth:** Evaluates revenue expansion and forward-looking catalysts.
+
+### Phase 2: The Investor Boardroom (Alpha Generation)
+The dossier is presented to a diverse board of "Persona Agents," each embodying a specific investment philosophy. They debate the findings and output a structured rating (`BUY`, `SELL`, `HOLD`) and conviction score.
+- **The Value Legends:** Warren Buffett, Ben Graham, and Aswath Damodaran focus on margin of safety and intrinsic value.
+- **The Growth Visionaries:** Cathie Wood and Phil Fisher look for disruptive innovation and long-term scaling.
+- **The Risk Specialists:** Nassim Taleb and Michael Burry hunt for tail risks and systemic fragility.
+- **The Tactical Traders:** Stanley Druckenmiller and Bill Ackman analyze macro positioning and reflexive market moves.
+
+### Phase 3: Portfolio Management (Decision Synthesis)
+The **Chief Investment Officer (CIO)** and **Portfolio Manager** aggregate the conflicting signals from the Boardroom. They resolve debates, apply macro overlays, and propose specific trade instructions (e.g., "Add 10 shares of MSFT at £420").
+
+### Phase 4: Risk Control & Execution (The Gatekeeper)
+The **Risk Manager** is the final bottleneck. It reviews the proposal against real-time account data from **Trading 212**. It validates position sizes, portfolio concentration, and volatility before providing final approval. Approved trades are then deterministically executed via the Trading 212 API.
 
 ---
 
