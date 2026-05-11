@@ -17,7 +17,7 @@ from app.tools.yfinance_tools import (
 
 
 def build_valuations_agent(ticker_name: str):
-
+    t = ticker_name.replace(".", "_")
     planner = BuiltInPlanner(
         thinking_config=types.ThinkingConfig(
             include_thoughts=True,
@@ -38,7 +38,7 @@ def build_valuations_agent(ticker_name: str):
     )
 
     valuations_quant_agent = LlmAgent(
-        name=f"valuations_raw_agent_{ticker_name}",
+        name=f"valuations_raw_agent_{t}",
         model=settings.REASONING_MODEL,
         description="A mathematical appraiser that calculates intrinsic value and relative pricing multiples like P/E, P/B, and PEG to determine if a stock is trading at a discount.",
         instruction=VALUATIONS_PROMPT,
@@ -50,20 +50,20 @@ def build_valuations_agent(ticker_name: str):
         ],
         generate_content_config=generate_content_config,
         input_schema=Ticker,
-        output_key=f"temp:valuations_agent_raw_output_{ticker_name}",
+        output_key=f"temp:valuations_agent_raw_output_{t}",
     )
 
     valuations_formatter_agent = LlmAgent(
-        name=f"valuations_formatter_agent_{ticker_name}",
+        name=f"valuations_formatter_agent_{t}",
         model=settings.FORMATTING_MODEL,
         instruction=VALUATIONS_FORMATTING_PROMPT,
         generate_content_config=generate_content_config,
         output_schema=ValuationAgentOutput,
-        output_key=f"valuations_agent_output_{ticker_name}",
+        output_key=f"valuations_agent_output_{t}",
     )
 
     valuations_agent = SequentialAgent(
-        name=f"valuations_agent_{ticker_name}",
+        name=f"valuations_agent_{t}",
         sub_agents=[
             valuations_quant_agent,
             valuations_formatter_agent,
