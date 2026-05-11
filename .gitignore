@@ -8,3 +8,4 @@ ai_hedge_fund.json
 .env.local
 outputs/dossier.json
 outputs/cio_output.json
+app/tickers.csv
