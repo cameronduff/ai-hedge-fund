@@ -13,7 +13,7 @@ from app.runner.runner import run_stage
 from app.models.quants_models import Ticker, Dossier
 from app.models.investors_models import CIOOutput
 from app.models.management_models import PortfolioManagerOutput
-from app.agents.quants.quants_orchestrator_agent.agent import quants_orchestrator_agent
+from app.agents.quants.quants_orchestrator_agent.agent import build_quants_orchestrator_agent
 from app.agents.investors.investors_orchestrator_agent.agent import investors_orchestrator_agent
 from app.agents.management.portfolio_manager_agent.agent import portfolio_manager_agent
 from app.clients.trading212_client import Trading212Client
@@ -22,6 +22,7 @@ from app.models.trading212_models import (
     LimitOrderPayload,
     StopLimitOrderPayload,
 )
+from app.utils.ticker_utils import load_watchlist
 
 load_dotenv(".env.local")
 
@@ -30,13 +31,9 @@ USER_ID = str(uuid4())
 OUTPUT_DIR = Path("outputs")
 OUTPUT_DIR.mkdir(exist_ok=True)
 
-STOCKS = [
-    Ticker(name="Apple", trading212_ticker="AAPL", yfinance_ticker="AAPL"),
-    Ticker(name="Microsoft", trading212_ticker="MSFT", yfinance_ticker="MSFT"),
-    Ticker(name="Nvidia", trading212_ticker="NVDA", yfinance_ticker="NVDA"),
-    Ticker(name="Tesla", trading212_ticker="TSLA", yfinance_ticker="TSLA"),
-    Ticker(name="Amazon", trading212_ticker="AMZN", yfinance_ticker="AMZN"),
-]
+STOCKS = load_watchlist()
+
+logger.info(f"Loaded {len(STOCKS)} tickers")
 
 session_service = InMemorySessionService()
 
@@ -52,7 +49,7 @@ asyncio.run(session_service.create_session(
     app_name=APP_NAME, session_id=session_id_1, user_id=USER_ID,
 ))
 runner_quants = Runner(
-    agent=quants_orchestrator_agent,
+    agent=build_quants_orchestrator_agent(STOCKS),
     app_name=APP_NAME,
     session_service=session_service,
     plugins=[ReflectAndRetryToolPlugin(max_retries=3)],
