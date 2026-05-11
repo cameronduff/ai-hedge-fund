@@ -67,7 +67,7 @@ chief_investment_officer_debater = LlmAgent(
 
 chief_investment_officer_formatter = LlmAgent(
     name="chief_investment_officer_formatter",
-    model=settings.REASONING_MODEL,
+    model=settings.FORMATTING_MODEL,
     instruction=CHIEF_INVESTMENT_OFFICER_FORMATTING_PROMPT,
     output_schema=CIOOutput,
     output_key="chief_investment_officer_output",
