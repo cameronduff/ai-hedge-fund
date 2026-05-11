@@ -4,6 +4,8 @@ Welcome to the **AI Hedge Fund**, a sophisticated multi-agent system designed to
 
 This project is inspired by the excellent work of [Virat Singh](https://github.com/virattt/ai-hedge-fund). It re-imagines the original concept using the **Google Agent Developer Kit (ADK)** and the **Gemini 2.0** suite of models to create a highly scalable, type-safe, and robust investment pipeline.
 
+> **Note:** Everything in this repository, except for the LLM prompts and the documentation, has been written by hand.
+
 ---
 
 ## 🏛 The Multi-Phase Pipeline
@@ -85,6 +87,14 @@ python -m app.main
 -   **Deterministic Execution:** Agents can suggest trades but **cannot** execute them directly. The final execution is handled by a strictly typed Python layer after risk approval.
 -   **Retry Logic:** All agents are configured with HTTP retry options and exponential backoff to gracefully handle rate limits (429 errors).
 -   **Memory Safety:** The system uses `InMemorySessionService` for short-lived, context-efficient research sessions.
+
+---
+
+## 🗺️ Future Roadmap
+
+-   **API Wrapper:** Add an API wrapper for self-hosted deployment.
+-   **Ticker Validation:** Implement Trading 212 and Yahoo Finance ticker validation before starting the pipeline execution.
+-   **Algorithmic Watchlist:** Generate an algorithmic watchlist to dynamically filter and select tickers for quantitative analysis, reducing manual selection.
 
 ---
 
