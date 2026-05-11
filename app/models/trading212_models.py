@@ -5,9 +5,9 @@ import json
 
 class LimitOrderPayload(BaseModel):
     limitPrice: float = Field(..., gt=0)
-    extendedHours: bool = Field(False)
     quantity: float = Field(..., gt=0)
     ticker: str = Field(...)
+    timeValidity: Literal["DAY", "GOOD_TILL_CANCEL"]
 
 
 class MarketOrderPayload(BaseModel):

@@ -22,16 +22,16 @@ risk_manager_agent = LlmAgent(
     planner=BuiltInPlanner(
         thinking_config=types.ThinkingConfig(
             include_thoughts=True,
-            thinking_level=types.ThinkingLevel.HIGH,
+            thinking_level=types.ThinkingLevel.MEDIUM,
         )
     ),
     generate_content_config=types.GenerateContentConfig(
         temperature=0.1,
         http_options=types.HttpOptions(
             retry_options=types.HttpRetryOptions(
-                attempts=5,
-                initial_delay=10.0,
-                max_delay=360.0,
+                attempts=3,
+                initial_delay=5.0,
+                max_delay=60.0,
                 exp_base=2.0,
             )
         ),
