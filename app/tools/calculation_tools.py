@@ -23,7 +23,7 @@ def calculate_position_size(
             - position_value_gbp: Total value of the position in GBP.
             - actual_position_pct: The actual percentage of the portfolio this position represents.
     """
-    logger.info("Calling calculate_position_size()")
+    logger.info(f"Calling calculate_position_size(portfolio_value_gbp={portfolio_value_gbp}, target_position_pct={target_position_pct}, limit_price_gbp={limit_price_gbp})")
     position_value = (portfolio_value_gbp * target_position_pct / 100)
     quantity = position_value / limit_price_gbp
     quantity_rounded = math.floor(quantity * 100) / 100  # floor to 2 decimal places
@@ -53,7 +53,7 @@ def calculate_remaining_cash(
             - cash_consumed_gbp: Total cost of the trade.
             - reserve_maintained: Boolean indicating if remaining cash is non-negative.
     """
-    logger.info("Calling calculate_remaining_cash()")
+    logger.info(f"Calling calculate_remaining_cash(cash_available_gbp={cash_available_gbp}, trade_value_gbp={trade_value_gbp})")
     remaining = cash_available_gbp - trade_value_gbp
     return {
         "remaining_cash_gbp": round(remaining, 2),
@@ -77,7 +77,7 @@ def calculate_position_value(
         A dict with:
             - total_value_gbp: Total value of the position.
     """
-    logger.info("Calling calculate_position_value()")
+    logger.info(f"Calling calculate_position_value(quantity={quantity}, price_gbp={price_gbp})")
     return {
         "total_value_gbp": round(quantity * price_gbp, 2),
     }
@@ -99,7 +99,7 @@ def calculate_portfolio_concentration(
             - position_pct: Percentage of the portfolio.
             - breaches_15pct_limit: Boolean indicating if the position exceeds 15% of the portfolio.
     """
-    logger.info("Calling calculate_portfolio_concentration()")
+    logger.info(f"Calling calculate_portfolio_concentration(position_value_gbp={position_value_gbp}, portfolio_value_gbp={portfolio_value_gbp})")
     pct = (position_value_gbp / portfolio_value_gbp) * 100
     return {
         "position_pct": round(pct, 2),
@@ -120,7 +120,7 @@ def calculate_annualised_volatility(daily_returns: list[float]) -> dict:
             - volatility_classification: LOW, MEDIUM, HIGH, or EXTREME.
             - size_reduction_pct: Suggested position size reduction percentage based on volatility.
     """
-    logger.info("Calling calculate_annualised_volatility()")
+    logger.info(f"Calling calculate_annualised_volatility(num_returns={len(daily_returns)})")
     import math
 
     n = len(daily_returns)
@@ -176,7 +176,7 @@ def calculate_unrealised_pnl(
             - stop_loss_flag: Boolean indicating if P&L is below -15%.
             - take_profit_flag: Boolean indicating if P&L is above 50%.
     """
-    logger.info("Calling calculate_unrealised_pnl()")
+    logger.info(f"Calling calculate_unrealised_pnl(average_cost_gbp={average_cost_gbp}, current_price_gbp={current_price_gbp}, quantity={quantity})")
     pnl_per_share = current_price_gbp - average_cost_gbp
     total_pnl = pnl_per_share * quantity
     pnl_pct = (pnl_per_share / average_cost_gbp) * 100
