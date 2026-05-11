@@ -2,7 +2,7 @@
 
 Welcome to the **AI Hedge Fund**, a sophisticated multi-agent system designed to automate equity research, investment debate, and trade execution. 
 
-This project is inspired by the excellent work of [Virat Singh](https://github.com/virattt/ai-hedge-fund). It re-imagines the original concept using the **Google Agent Developer Kit (ADK)** and the **Gemini 2.0** suite of models to create a highly scalable, type-safe, and robust investment pipeline.
+This project is inspired by the excellent work of [Virat Singh](https://github.com/virattt/ai-hedge-fund). It re-imagines the original concept using the **Google Agent Developer Kit (ADK)** and the **Gemini** suite of models to create a highly scalable, type-safe, and robust investment pipeline.
 
 > **Note:** Everything in this repository, except for the LLM prompts and the documentation, has been written by hand.
 
@@ -50,7 +50,7 @@ Approved trades are passed to a deterministic Python layer in the main runner. T
 ### 1. Prerequisites
 - Python 3.10+
 - [uv](https://github.com/astral-sh/uv) (recommended) or `pip`
-- Google Gemini API Key
+- Google Cloud Service Account (with Vertex AI API enabled)
 - Trading 212 API Key (Demo account recommended)
 
 ### 2. Installation
@@ -66,7 +66,9 @@ uv sync
 ### 3. Configuration
 Create a `.env.local` file in the root directory:
 ```env
-GOOGLE_API_KEY=your_gemini_api_key
+# Path to your Google Cloud Service Account JSON key
+GOOGLE_APPLICATION_CREDENTIALS=path/to/your/service-account-key.json
+
 TRADING_212_API_KEY=your_t212_api_key
 TRADING_212_API_SECRET=your_t212_api_secret
 
