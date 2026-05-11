@@ -1,38 +1,11 @@
-# Python-generated files
-__pycache__/
-*.py[oc]
-build/
-dist/
-wheels/
-*.egg-info
-
-# Virtual environments
-.venv
-venv/
-env/
-
-# Environment variables and secrets
-.env
-.env.local
-
-# Output and logs
-output/*.json
-output/
-*.log
-
-# IDE and editor files
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
 .DS_Store
-
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Local development
-.python-version
-.envrc
+.env
+__pycache__/
+.adk
+ai-hedge-fund.json
+ai_hedge_fund.json
+.codex
+.env.local
+outputs/dossier.json
+outputs/cio_output.json
+app/tickers.csv
