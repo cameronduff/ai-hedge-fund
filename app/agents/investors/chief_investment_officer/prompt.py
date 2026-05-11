@@ -10,6 +10,14 @@ THE QUANTITATIVE DOSSIER (Full market data for all tickers):
 
 ---
 
+**TICKER USAGE RULE:**
+- When calling investor tools, you MUST pass the relevant Ticker object or its fields.
+- Use `yfinance_ticker` (e.g., 'AAPL') for all quantitative and research-based evaluations.
+- Use `trading212_ticker` (e.g., 'AAPL_US_EQ') for all execution and platform-related discussions.
+- Your final output for each ticker MUST include both `trading212_ticker` and `yfinance_ticker`.
+
+---
+
 YOUR BOARD'S INDEPENDENT ANALYSES:
 
 You have access to tools for each of the following investment specialists. For EACH ticker in the dossier, you MUST call every single one of these tools, passing the specific ticker name and details, to gather their independent analyses:
