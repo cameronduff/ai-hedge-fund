@@ -11,18 +11,10 @@ from app.models.quants_models import Ticker, Dossier
 
 from loguru import logger
 
-STOCKS = [
-    # --- US TECH & GROWTH ---
-    Ticker(name="Apple", trading212_ticker="AAPL", yfinance_ticker="AAPL"),
-    Ticker(name="Microsoft", trading212_ticker="MSFT", yfinance_ticker="MSFT"),
-    # Ticker(name="Nvidia", trading212_ticker="NVDA", yfinance_ticker="NVDA"),
-    # Ticker(name="Tesla", trading212_ticker="TSLA", yfinance_ticker="TSLA"),
-    # Ticker(name="Amazon", trading212_ticker="AMZN", yfinance_ticker="AMZN"),
-]
-
+from app.utils.ticker_utils import load_watchlist
 
 def build_ticker_pipeline(ticker: Ticker) -> SequentialAgent:
-    t = ticker.yfinance_ticker
+    t = ticker.yfinance_ticker.replace(".","_")
 
     quants_team = ParallelAgent(
         name=f"quants_{t}",
@@ -47,15 +39,17 @@ def build_ticker_pipeline(ticker: Ticker) -> SequentialAgent:
         ]
     )
 
-quants_orchestrator_agent = SequentialAgent(
-    name="quants_orchestrator_agent",
-    sub_agents=[
-        *[build_ticker_pipeline(ticker) for ticker in STOCKS], 
-        DossierAggregatorAgent(name="dossier_aggregator", stocks=STOCKS)
-    ],
-)
+def build_quants_orchestrator_agent(STOCKS: list[Ticker]):
+    quants_orchestrator_agent = SequentialAgent(
+        name="quants_orchestrator_agent",
+        sub_agents=[
+            *[build_ticker_pipeline(ticker) for ticker in STOCKS], 
+            DossierAggregatorAgent(name="dossier_aggregator", stocks=STOCKS)
+        ],
+    )
+    
+    return quants_orchestrator_agent
 
-root_agent = quants_orchestrator_agent
 
 if __name__ == "__main__":
     from google.adk.runners import Runner
@@ -66,6 +60,8 @@ if __name__ == "__main__":
     from dotenv import load_dotenv
 
     load_dotenv(".env.local")
+
+    STOCKS = load_watchlist()
 
     APP_NAME = "ai_hedge_fund"
     USER_ID = str(uuid4())
@@ -78,7 +74,7 @@ if __name__ == "__main__":
         )
     )
     runner = Runner(
-        agent=quants_orchestrator_agent,
+        agent=build_quants_orchestrator_agent(STOCKS),
         app_name=APP_NAME,
         session_service=session_service,
         plugins=[ReflectAndRetryToolPlugin(max_retries=3)],
