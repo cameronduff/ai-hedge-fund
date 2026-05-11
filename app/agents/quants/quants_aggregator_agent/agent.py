@@ -10,7 +10,7 @@ class QuantsAggregatorAgent(BaseAgent):
     ticker: Ticker
 
     async def _run_async_impl(self, ctx):
-        ticker_name = self.ticker.yfinance_ticker
+        ticker_name = self.ticker.yfinance_ticker.replace(".", "_")
 
         fundamentals = FundamentalsAgentOutput.model_validate(ctx.session.state[f"fundamentals_agent_output_{ticker_name}"])
         technicals = TechnicalAgentOutput.model_validate(ctx.session.state[f"technicals_agent_output_{ticker_name}"])
@@ -41,7 +41,7 @@ class DossierAggregatorAgent(BaseAgent):
     async def _run_async_impl(self, ctx):
         dossier = Dossier(final_dossier=[])
         for stock in self.stocks:
-            ticker_name = stock.yfinance_ticker
+            ticker_name = stock.yfinance_ticker.replace(".", "_")
 
             quants_analysis = TickerDossier.model_validate_json(
                 ctx.session.state[f"quants_final_output_{ticker_name}"]

@@ -17,7 +17,7 @@ from app.tools.yfinance_tools import (
 
 
 def build_fundamentals_agent(ticker_name: str):
-
+    t = ticker_name.replace(".", "_")
     planner = BuiltInPlanner(
         thinking_config=types.ThinkingConfig(
             include_thoughts=True,
@@ -38,7 +38,7 @@ def build_fundamentals_agent(ticker_name: str):
     )
 
     fundamentals_quant_agent = LlmAgent(
-        name=f"fundamentals_raw_agent_{ticker_name}",
+        name=f"fundamentals_raw_agent_{t}",
         model=settings.REASONING_MODEL,
         description="A rigorous accounting specialist that dissects balance sheets and income statements to verify financial health, debt levels, and operational efficiency.",
         instruction=FUNDAMENTALS_PROMPT,
@@ -50,20 +50,20 @@ def build_fundamentals_agent(ticker_name: str):
         ],
         generate_content_config=generate_content_config,
         input_schema=Ticker,
-        output_key=f"temp:fundamentals_agent_raw_output_{ticker_name}",
+        output_key=f"temp:fundamentals_agent_raw_output_{t}",
     )
 
     fundamentals_formatter_agent = LlmAgent(
-        name=f"fundamentals_formatter_agent_{ticker_name}",
+        name=f"fundamentals_formatter_agent_{t}",
         model=settings.FORMATTING_MODEL,
         instruction=FUNDAMENTALS_FORMATTING_PROMPT,
         generate_content_config=generate_content_config,
         output_schema=FundamentalsAgentOutput,
-        output_key=f"fundamentals_agent_output_{ticker_name}",
+        output_key=f"fundamentals_agent_output_{t}",
     )
 
     fundamentals_agent = SequentialAgent(
-        name=f"fundamentals_agent_{ticker_name}",
+        name=f"fundamentals_agent_{t}",
         sub_agents=[fundamentals_quant_agent, fundamentals_formatter_agent],
     )
 
