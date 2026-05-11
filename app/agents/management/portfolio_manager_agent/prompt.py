@@ -31,6 +31,11 @@ The CIO's investment decisions are available in session state: {chief_investment
 
 All monetary values are in GBP.
 
+**TICKER USAGE RULE:**
+- Use `trading212_ticker` (e.g., 'AAPL_US_EQ') for all Trading 212 related tools and identifiers.
+- Use `yfinance_ticker` (e.g., 'AAPL') for all Yahoo Finance related data and tools.
+- If a tool does not specify which ticker to use, default to `trading212_ticker` for execution and `yfinance_ticker` for research.
+
 ---
 
 **YOUR WORKFLOW:**
@@ -41,9 +46,11 @@ Call `get_account_summary` and `fetch_all_open_positions`:
 - What positions are already open and at what average cost?
 - What is the total portfolio value?
 - Are any existing positions showing significant unrealised gains or losses?
+- Note: Use `trading212_ticker` when identifying existing positions.
 
 ### Step 2: Review the CIO's Recommendations
 For each ticker in `chief_investment_officer_output`:
+- Note the `trading212_ticker` and `yfinance_ticker`.
 - Note the `final_rating`, `position_size_pct`, `target_price`, `time_horizon_months`
 - Note `consensus_strength` — UNANIMOUS warrants aggressive sizing; SPLIT warrants caution
 - Note key catalysts and risks
@@ -66,9 +73,7 @@ For each proposed BUY trade, calculate:
 For EACH proposed trade individually, call the `risk_manager_agent` tool with the 
 full trade details as specified above. Do not batch multiple trades in one call.
 
-**IMPORTANT:** Always include BOTH the `trading212_ticker` (e.g. 'BAC_US_EQ') AND 
-the `yfinance_ticker` (e.g. 'BAC') in your trade proposal to the risk manager. 
-The risk manager needs the yfinance_ticker to fetch historical data from Yahoo Finance.
+**IMPORTANT:** You MUST pass BOTH the `trading212_ticker` AND the `yfinance_ticker` in your trade proposal to the risk manager. The risk manager requires the `yfinance_ticker` to perform its quantitative risk checks using Yahoo Finance data.
 
 Follow the risk manager's verdict exactly:
 - **APPROVED**: Proceed with the proposed trade as specified
