@@ -8,27 +8,26 @@ This project is inspired by the excellent work of [Virat Singh](https://github.c
 
 ## 🏛 The Multi-Phase Pipeline
 
-Instead of a single prompt, the fund operates through a strictly linear, four-phase pipeline:
+Instead of a single prompt, the fund operates through a strictly linear, four-stage pipeline:
 
-### Phase 1: Quantitative Analysis (The Quants)
+### Stage 1: Quantitative Analysis (The Quants)
 The Quants are the data analysts. Their sole purpose is to build a standardized, factual "Master Dossier" using tools like `yfinance`.
 - **Technicals:** Analyzes price action, RSI, MACD, and moving averages.
 - **Fundamentals:** Dissects balance sheets, income statements, and cash flows.
 - **Valuations:** Calculates intrinsic value using DCF, P/E, and PEG ratios.
 - **Growth:** Evaluates revenue expansion and forward-looking catalysts.
 
-### Phase 2: The Investor Boardroom (Alpha Generation)
-The dossier is presented to a diverse board of "Persona Agents," each embodying a specific investment philosophy. They debate the findings and output a structured rating (`BUY`, `SELL`, `HOLD`) and conviction score.
+### Stage 2: The Investor Boardroom (Alpha Generation)
+The dossier is presented to a diverse board of "Persona Agents," each embodying a specific investment philosophy. The **Chief Investment Officer (CIO)** orchestrates a debate between these experts and outputs a structured rating (`BUY`, `SELL`, `HOLD`) and conviction score for each ticker.
 - **The Value Legends:** Warren Buffett, Ben Graham, and Aswath Damodaran focus on margin of safety and intrinsic value.
 - **The Growth Visionaries:** Cathie Wood and Phil Fisher look for disruptive innovation and long-term scaling.
 - **The Risk Specialists:** Nassim Taleb and Michael Burry hunt for tail risks and systemic fragility.
-- **The Tactical Traders:** Stanley Druckenmiller and Bill Ackman analyze macro positioning and reflexive market moves.
 
-### Phase 3: Portfolio Management (Decision Synthesis)
-The **Chief Investment Officer (CIO)** and **Portfolio Manager** aggregate the conflicting signals from the Boardroom. They resolve debates, apply macro overlays, and propose specific trade instructions (e.g., "Add 10 shares of MSFT at £420").
+### Stage 3: Portfolio Management (Decision Synthesis & Risk Check)
+The **Portfolio Manager** aggregates the signals from the CIO. For each trade, the PM consults the **Risk Manager**—the ultimate gatekeeper. The Risk Manager validates position sizes, portfolio concentration, and volatility against real-time account data from **Trading 212**.
 
-### Phase 4: Risk Control & Execution (The Gatekeeper)
-The **Risk Manager** is the final bottleneck. It reviews the proposal against real-time account data from **Trading 212**. It validates position sizes, portfolio concentration, and volatility before providing final approval. Approved trades are then deterministically executed via the Trading 212 API.
+### Stage 4: Trade Execution (Deterministic API Layer)
+Approved trades are passed to a deterministic Python layer in the main runner. This stage handles the actual interaction with the **Trading 212 API**, ensuring that execution is reliable, logged, and separate from the LLM's cognitive processes.
 
 ---
 
