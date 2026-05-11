@@ -9,6 +9,21 @@ def calculate_position_size(
     target_position_pct: float,
     limit_price_gbp: float,
 ) -> dict:
+    """
+    Calculates the quantity of shares to buy based on a target percentage of the portfolio.
+
+    Args:
+        portfolio_value_gbp: Total value of the portfolio in GBP.
+        target_position_pct: The desired percentage of the portfolio for this position (0-100).
+        limit_price_gbp: The price per share in GBP.
+
+    Returns:
+        A dict with:
+            - quantity: Number of shares (rounded down to 2 decimal places).
+            - position_value_gbp: Total value of the position in GBP.
+            - actual_position_pct: The actual percentage of the portfolio this position represents.
+    """
+    logger.info("Calling calculate_position_size()")
     position_value = (portfolio_value_gbp * target_position_pct / 100)
     quantity = position_value / limit_price_gbp
     quantity_rounded = math.floor(quantity * 100) / 100  # floor to 2 decimal places
@@ -33,8 +48,12 @@ def calculate_remaining_cash(
         trade_value_gbp: Total value of the proposed trade in GBP.
 
     Returns:
-        A dict with remaining_cash_gbp, cash_consumed_gbp, and reserve_maintained (bool).
+        A dict with:
+            - remaining_cash_gbp: Cash remaining after the trade.
+            - cash_consumed_gbp: Total cost of the trade.
+            - reserve_maintained: Boolean indicating if remaining cash is non-negative.
     """
+    logger.info("Calling calculate_remaining_cash()")
     remaining = cash_available_gbp - trade_value_gbp
     return {
         "remaining_cash_gbp": round(remaining, 2),
@@ -55,8 +74,10 @@ def calculate_position_value(
         price_gbp: Price per share in GBP.
 
     Returns:
-        A dict with total_value_gbp.
+        A dict with:
+            - total_value_gbp: Total value of the position.
     """
+    logger.info("Calling calculate_position_value()")
     return {
         "total_value_gbp": round(quantity * price_gbp, 2),
     }
@@ -74,8 +95,11 @@ def calculate_portfolio_concentration(
         portfolio_value_gbp: Total portfolio value in GBP.
 
     Returns:
-        A dict with position_pct and breaches_15pct_limit (bool).
+        A dict with:
+            - position_pct: Percentage of the portfolio.
+            - breaches_15pct_limit: Boolean indicating if the position exceeds 15% of the portfolio.
     """
+    logger.info("Calling calculate_portfolio_concentration()")
     pct = (position_value_gbp / portfolio_value_gbp) * 100
     return {
         "position_pct": round(pct, 2),
@@ -91,8 +115,12 @@ def calculate_annualised_volatility(daily_returns: list[float]) -> dict:
         daily_returns: List of daily return values (e.g. [0.01, -0.02, 0.005, ...]).
 
     Returns:
-        A dict with annualised_volatility_pct and volatility_classification.
+        A dict with:
+            - annualised_volatility_pct: Annualised volatility as a percentage.
+            - volatility_classification: LOW, MEDIUM, HIGH, or EXTREME.
+            - size_reduction_pct: Suggested position size reduction percentage based on volatility.
     """
+    logger.info("Calling calculate_annualised_volatility()")
     import math
 
     n = len(daily_returns)
@@ -142,8 +170,13 @@ def calculate_unrealised_pnl(
         quantity: Number of shares held.
 
     Returns:
-        A dict with unrealised_pnl_gbp, pnl_pct, stop_loss_flag, and take_profit_flag.
+        A dict with:
+            - unrealised_pnl_gbp: Unrealised profit or loss in GBP.
+            - pnl_pct: Profit or loss as a percentage of cost.
+            - stop_loss_flag: Boolean indicating if P&L is below -15%.
+            - take_profit_flag: Boolean indicating if P&L is above 50%.
     """
+    logger.info("Calling calculate_unrealised_pnl()")
     pnl_per_share = current_price_gbp - average_cost_gbp
     total_pnl = pnl_per_share * quantity
     pnl_pct = (pnl_per_share / average_cost_gbp) * 100
