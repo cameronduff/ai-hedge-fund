@@ -224,13 +224,17 @@ if portfolio_output.instructions:
         elif instruction.action in ["BUY", "ADD"] and quantity < 0:
             quantity = -quantity
         
+        # Rounding for API precision
+        quantity = round(quantity, 2)
+        limit_price = round(instruction.limit_price, 4) if instruction.limit_price else None
+        
         logger.info(f"Executing {instruction.action} {abs(quantity)} x {instruction.trading212_ticker} via {instruction.order_type}...")
         
         try:
             if instruction.order_type == "MARKET":
                 # MarketOrderPayload in this project requires a limitPrice > 0
                 payload = MarketOrderPayload(
-                    limitPrice=instruction.limit_price or 0.01, 
+                    limitPrice=limit_price or 0.01, 
                     quantity=quantity,
                     ticker=instruction.trading212_ticker,
                     timeValidity=instruction.time_validity
@@ -238,10 +242,10 @@ if portfolio_output.instructions:
                 result = trading212_client.place_market_order(payload)
             elif instruction.order_type == "LIMIT":
                 payload = LimitOrderPayload(
-                    limitPrice=instruction.limit_price,
+                    limitPrice=limit_price,
                     quantity=quantity,
                     ticker=instruction.trading212_ticker,
-                    extendedHours=instruction.extended_hours
+                    timeValidity=instruction.time_validity
                 )
                 result = trading212_client.place_limit_order(payload)
             elif instruction.order_type == "STOP_LIMIT":
@@ -257,7 +261,10 @@ if portfolio_output.instructions:
                 logger.error(f"Unsupported order type: {instruction.order_type}")
                 continue
             
-            logger.info(f"Successfully placed order for {instruction.trading212_ticker}. Result: {result}")
+            if isinstance(result, dict) and result.get("status") in (400, 401, 403, 404, 500):
+                logger.error(f"API rejected order for {instruction.trading212_ticker}: {result}")
+            else:
+                logger.info(f"Successfully placed order for {instruction.trading212_ticker}. Result: {result}")
         except Exception as e:
             logger.error(f"Failed to execute trade for {instruction.trading212_ticker}: {e}")
 else:
