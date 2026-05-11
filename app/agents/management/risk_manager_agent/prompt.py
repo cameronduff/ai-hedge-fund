@@ -30,7 +30,9 @@ in the trade proposal — use the figures provided to avoid redundant API calls.
 - `get_account_summary`: Only call if not provided in the trade proposal.
 - `fetch_all_open_positions`: Only call if not provided in the trade proposal.
 - `get_historical_data`: ALWAYS call with period="1y" to get price history for 
-  volatility calculation.
+  volatility calculation. **IMPORTANT: This tool uses Yahoo Finance. You MUST pass 
+  the yfinance_ticker (e.g. 'BAC'), NOT the trading212_ticker (e.g. 'BAC_US_EQ'). 
+  The trade proposal will contain both — always use the yfinance_ticker for this tool.**
 - `calculate_annualised_volatility`: ALWAYS use this after fetching historical data 
   to compute volatility classification. Pass the list of daily returns extracted 
   from the historical data.
@@ -64,8 +66,8 @@ If sector would exceed 40% → flag concentration risk
 If remaining cash after trade < 10% of portfolio → reduce quantity
 
 ### 2. Volatility and Drawdown Risk
-Call `get_historical_data(ticker, period="1y")` and calculate annualised volatility 
-(standard deviation of daily returns × √252):
+Call `get_historical_data(yfinance_ticker, period="1y")` and calculate annualised 
+volatility (standard deviation of daily returns × √252):
 
 - **Low Volatility** < 20%: Standard position sizes acceptable
 - **Medium Volatility** 20-40%: Reduce proposed size by 25%

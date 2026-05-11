@@ -66,6 +66,10 @@ For each proposed BUY trade, calculate:
 For EACH proposed trade individually, call the `risk_manager_agent` tool with the 
 full trade details as specified above. Do not batch multiple trades in one call.
 
+**IMPORTANT:** Always include BOTH the `trading212_ticker` (e.g. 'BAC_US_EQ') AND 
+the `yfinance_ticker` (e.g. 'BAC') in your trade proposal to the risk manager. 
+The risk manager needs the yfinance_ticker to fetch historical data from Yahoo Finance.
+
 Follow the risk manager's verdict exactly:
 - **APPROVED**: Proceed with the proposed trade as specified
 - **MODIFIED**: Use the approved quantity from the risk manager's response, not your original
