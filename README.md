@@ -70,7 +70,7 @@ TRADING_212_API_SECRET=your_t212_api_secret
 
 # Optional: Override default models
 REASONING_MODEL=gemini-3.1-pro-preview
-FORMATTING_MODEL=gemini-5.5-flash
+FORMATTING_MODEL=gemini-2.5-flash
 ```
 
 ### 4. Running the Fund
