@@ -119,13 +119,24 @@ class WatchlistService():
         
         return round(((mean_target - current_price) / current_price) * 100, 2)
     
-    def get_revenue_growth():
+    def get_revenue_growth(self, yfinance_ticker: str):
         """
         Target > 5%
         """
-        pass
+        yfinance_client = YFinanceClient()
+        income_stmt = yfinance_client.get_quarterly_income_statement(ticker=yfinance_ticker)
+        
+        revenue = income_stmt.loc["Total Revenue"]
+        
+        current_quarter = revenue.iloc[0]   # most recent
+        prior_year_quarter = revenue.iloc[4] # same quarter last year
+        
+        if prior_year_quarter == 0:
+            return None
+            
+        return round(((current_quarter - prior_year_quarter) / abs(prior_year_quarter)) * 100, 2)
 
-    def get_earnings_date():
+    def get_earnings_date(self, yfinance_ticker: str):
         """
         Earnings > 14 days
         """
