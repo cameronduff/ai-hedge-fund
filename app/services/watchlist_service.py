@@ -32,6 +32,9 @@ class WatchlistService():
         return current_stock_interest
     
     def get_day_moving_average_devation_percentage(self, yfinance_ticker: str, period: str = "50d") -> float:
+        """
+        Target >15% (TBC)
+        """
         yfinance_client = YFinanceClient()
         historical_data = yfinance_client.get_historical_data(ticker=yfinance_ticker, period=period)
         ma = historical_data['Close'].mean()
@@ -43,6 +46,7 @@ class WatchlistService():
         """
         Wilder's smoothed moving average:
         Overbought (>70) or oversold (<30)
+        Target RSI 30-70
         """
         yfinance_client = YFinanceClient()
         historical_data = yfinance_client.get_historical_data(ticker=yfinance_ticker, period="3mo")
@@ -70,6 +74,9 @@ class WatchlistService():
         return round(rsi[-1], 1)
     
     def get_price_to_earnings_ratio(self, yfinance_ticker: str):
+        """
+        Target P/E < 35
+        """
         yfinance_client = YFinanceClient()
         info = yfinance_client.get_info_by_ticker(ticker=yfinance_ticker)
 
@@ -81,6 +88,8 @@ class WatchlistService():
         D/E < 1 means the company is majority equity-financed, generally lower risk
         D/E 1–2 is common and acceptable in most sectors
         D/E > 2 warrants scrutiny, though capital-intensive sectors like utilities or airlines routinely run higher
+
+        Target D/E < 2
         """
 
         yfinance_client = YFinanceClient()
