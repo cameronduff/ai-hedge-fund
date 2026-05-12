@@ -7,10 +7,19 @@ from app.clients.yfinance_client import YFinanceClient
 
 class WatchlistService():
     def __init__(self):
+        """
+        Initializes the WatchlistService and loads the watchlist from a CSV file.
+        """
         self.watchlist = pd.read_csv("app/tickers.csv")
         self.watchlist = self.watchlist.dropna()
     
     def get_existing_traded_instruments(self):
+        """
+        Fetches all currently traded instruments and pending orders from Trading212.
+
+        Returns:
+            set: A set of tickers for instruments that are either held or have pending orders.
+        """
         current_stock_interest = set()
     
         trading212_client = Trading212Client()
@@ -33,7 +42,16 @@ class WatchlistService():
     
     def get_day_moving_average_devation_percentage(self, yfinance_ticker: str, period: str = "50d") -> float:
         """
-        Target >15% (TBC)
+        Calculates the percentage deviation of the current price from its moving average.
+
+        Target: >15% (TBC)
+
+        Args:
+            yfinance_ticker (str): The Yahoo Finance ticker symbol.
+            period (str): The period for calculating the moving average (default "50d").
+
+        Returns:
+            float: The percentage deviation.
         """
         yfinance_client = YFinanceClient()
         historical_data = yfinance_client.get_historical_data(ticker=yfinance_ticker, period=period)
@@ -44,9 +62,17 @@ class WatchlistService():
 
     def get_rsi(self, yfinance_ticker: str, period: int = 14) -> float:
         """
-        Wilder's smoothed moving average:
-        Overbought (>70) or oversold (<30)
-        Target RSI 30-70
+        Calculates the Relative Strength Index (RSI) using Wilder's smoothed moving average.
+
+        Overbought (>70) or oversold (<30).
+        Target: RSI 30-70.
+
+        Args:
+            yfinance_ticker (str): The Yahoo Finance ticker symbol.
+            period (int): The period for RSI calculation (default 14).
+
+        Returns:
+            float: The current RSI value.
         """
         yfinance_client = YFinanceClient()
         historical_data = yfinance_client.get_historical_data(ticker=yfinance_ticker, period="3mo")
@@ -75,7 +101,15 @@ class WatchlistService():
     
     def get_price_to_earnings_ratio(self, yfinance_ticker: str):
         """
-        Target P/E < 35
+        Fetches the trailing Price-to-Earnings (P/E) ratio for a ticker.
+
+        Target: P/E < 35.
+
+        Args:
+            yfinance_ticker (str): The Yahoo Finance ticker symbol.
+
+        Returns:
+            float: The trailing P/E ratio.
         """
         yfinance_client = YFinanceClient()
         info = yfinance_client.get_info_by_ticker(ticker=yfinance_ticker)
@@ -85,11 +119,18 @@ class WatchlistService():
     
     def get_debt_equity_ratio(self, yfinance_ticker: str):
         """
-        D/E < 1 means the company is majority equity-financed, generally lower risk
-        D/E 1–2 is common and acceptable in most sectors
-        D/E > 2 warrants scrutiny, though capital-intensive sectors like utilities or airlines routinely run higher
+        Calculates the Debt-to-Equity (D/E) ratio for a ticker.
 
-        Target D/E < 2
+        - D/E < 1: Company is majority equity-financed, generally lower risk.
+        - D/E 1–2: Common and acceptable in most sectors.
+        - D/E > 2: Warrants scrutiny.
+        Target: D/E < 2.
+
+        Args:
+            yfinance_ticker (str): The Yahoo Finance ticker symbol.
+
+        Returns:
+            float | None: The Debt-to-Equity ratio, or None if equity is zero.
         """
 
         yfinance_client = YFinanceClient()
@@ -105,7 +146,15 @@ class WatchlistService():
     
     def get_analyst_upside(self, yfinance_ticker: str) -> float | None:
         """
-        Target > 10%
+        Calculates the percentage upside based on analyst price targets.
+
+        Target: > 10%.
+
+        Args:
+            yfinance_ticker (str): The Yahoo Finance ticker symbol.
+
+        Returns:
+            float | None: The percentage upside, or None if targets or price are unavailable.
         """
         yfinance_client = YFinanceClient()
 
@@ -121,7 +170,15 @@ class WatchlistService():
     
     def get_revenue_growth(self, yfinance_ticker: str):
         """
-        Target > 5%
+        Calculates the year-over-year quarterly revenue growth.
+
+        Target: > 5%.
+
+        Args:
+            yfinance_ticker (str): The Yahoo Finance ticker symbol.
+
+        Returns:
+            float | None: The percentage revenue growth, or None if prior year data is unavailable.
         """
         yfinance_client = YFinanceClient()
         income_stmt = yfinance_client.get_quarterly_income_statement(ticker=yfinance_ticker)
@@ -138,7 +195,15 @@ class WatchlistService():
 
     def get_earnings_date(self, yfinance_ticker: str):
         """
-        Target is earnings > 14 days away
+        Calculates the number of days until the next expected earnings date.
+
+        Target: Earnings > 14 days away.
+
+        Args:
+            yfinance_ticker (str): The Yahoo Finance ticker symbol.
+
+        Returns:
+            int | None: Days until earnings, or None if no earnings date is found.
         """
         yfinance_client = YFinanceClient()
         calendar = yfinance_client.get_calendar(ticker=yfinance_ticker)
