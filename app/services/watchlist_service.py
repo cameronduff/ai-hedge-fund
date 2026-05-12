@@ -102,7 +102,22 @@ class WatchlistService():
             return None
 
         return round(total_debt / equity, 2)
+    
+    def get_analyst_upside(self, yfinance_ticker: str) -> float | None:
+        """
+        Target > 10%
+        """
+        yfinance_client = YFinanceClient()
+
+        targets = yfinance_client.get_analyst_price_targets(ticker=yfinance_ticker)
+        mean_target = targets.get("mean")
+
+        current_price = yfinance_client.get_current_price(ticker=yfinance_ticker)
+
+        if not mean_target or not current_price:
+            return None
+        
+        return round(((mean_target - current_price) / current_price) * 100, 2)
 
 if __name__ == "__main__":
     yfinance_ticker = "AAPL"
-    
