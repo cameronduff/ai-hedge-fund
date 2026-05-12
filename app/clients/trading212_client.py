@@ -1,8 +1,8 @@
 import base64
+
 import requests
-import time
-from requests.exceptions import HTTPError
 from loguru import logger
+from requests.exceptions import HTTPError
 
 from app.core.config import settings
 from app.models.trading212_models import (
@@ -241,10 +241,12 @@ class Trading212Client:
             if response.status_code == 429:
                 reset_timestamp = response.headers.get("x-ratelimit-reset")
                 logger.error(f"Rate limit exceeded, limit resets at {reset_timestamp}")
+                return None
             else:
                 logger.error(f"HTTP error occurred: {http_error}")
         except Exception as err:
             logger.error(f"An unrelated error occurred: {err}")
+            return None
 
 
 if __name__ == "__main__":

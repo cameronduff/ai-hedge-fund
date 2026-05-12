@@ -38,6 +38,6 @@ class YFinanceClient:
 if __name__ == "__main__":
     tfinance_client = YFinanceClient()
 
-    data = tfinance_client.get_options_chain("MSFT")
+    data = tfinance_client.get_info_by_ticker("123")
 
-    print(data)
+    print(type(data))
