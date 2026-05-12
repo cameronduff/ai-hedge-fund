@@ -118,6 +118,18 @@ class WatchlistService():
             return None
         
         return round(((mean_target - current_price) / current_price) * 100, 2)
+    
+    def get_revenue_growth():
+        """
+        Target > 5%
+        """
+        pass
+
+    def get_earnings_date():
+        """
+        Earnings > 14 days
+        """
+        pass
 
 if __name__ == "__main__":
     yfinance_ticker = "AAPL"
