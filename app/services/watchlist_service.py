@@ -75,10 +75,25 @@ class WatchlistService():
 
         pe_ratio = round(info.get("trailingPE"), 2)
         return pe_ratio
+    
+    def get_debt_equity_ratio(self, yfinance_ticker: str):
+        """
+        D/E < 1 means the company is majority equity-financed, generally lower risk
+        D/E 1–2 is common and acceptable in most sectors
+        D/E > 2 warrants scrutiny, though capital-intensive sectors like utilities or airlines routinely run higher
+        """
+
+        yfinance_client = YFinanceClient()
+        balance_sheet = yfinance_client.get_balance_sheet_by_ticker(yfinance_ticker)
+
+        total_debt = balance_sheet.loc["Total Debt"].iloc[0]
+        equity = balance_sheet.loc["Stockholders Equity"].iloc[0]
+
+        if equity == 0:
+            return None
+
+        return round(total_debt / equity, 2)
 
 if __name__ == "__main__":
     yfinance_ticker = "AAPL"
-    yfinance_client = YFinanceClient()
-    info = yfinance_client.get_info_by_ticker(ticker=yfinance_ticker)
-
-    print(round(info.get("trailingPE"), 2))
+    
