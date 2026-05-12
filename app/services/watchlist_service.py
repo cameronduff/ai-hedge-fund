@@ -128,8 +128,8 @@ class WatchlistService():
         
         revenue = income_stmt.loc["Total Revenue"]
         
-        current_quarter = revenue.iloc[0]   # most recent
-        prior_year_quarter = revenue.iloc[4] # same quarter last year
+        current_quarter = revenue.iloc[0]       # most recent
+        prior_year_quarter = revenue.iloc[4]    # same quarter last year
         
         if prior_year_quarter == 0:
             return None
@@ -138,9 +138,21 @@ class WatchlistService():
 
     def get_earnings_date(self, yfinance_ticker: str):
         """
-        Earnings > 14 days
+        Target is earnings > 14 days away
         """
-        pass
+        yfinance_client = YFinanceClient()
+        calendar = yfinance_client.get_calendar(ticker=yfinance_ticker)
+        earnings_dates = calendar.get("Earnings Date")
+
+        if not earnings_dates:
+            return None
+
+        # Take the first date (start of the expected window)
+        next_earnings = pd.Timestamp(earnings_dates[0])
+        today = pd.Timestamp.now(tz=next_earnings.tz)
+        days_until = (next_earnings - today).days
+
+        return days_until
 
 if __name__ == "__main__":
     yfinance_ticker = "AAPL"
