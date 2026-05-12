@@ -68,6 +68,17 @@ class WatchlistService():
         rsi = 100 - (100 / (1 + rs))
 
         return round(rsi[-1], 1)
+    
+    def get_price_to_earnings_ratio(self, yfinance_ticker: str):
+        yfinance_client = YFinanceClient()
+        info = yfinance_client.get_info_by_ticker(ticker=yfinance_ticker)
+
+        pe_ratio = round(info.get("trailingPE"), 2)
+        return pe_ratio
 
 if __name__ == "__main__":
-    pass
+    yfinance_ticker = "AAPL"
+    yfinance_client = YFinanceClient()
+    info = yfinance_client.get_info_by_ticker(ticker=yfinance_ticker)
+
+    print(round(info.get("trailingPE"), 2))
