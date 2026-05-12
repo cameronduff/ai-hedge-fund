@@ -34,6 +34,11 @@ class YFinanceClient:
         data = yf.Ticker(ticker)
         return data.analyst_price_targets
 
+    def get_current_price(self, ticker: str):
+        data = yf.Ticker(ticker)
+        info = data.info
+        return info.get('currentPrice')
+
 
 if __name__ == "__main__":
     tfinance_client = YFinanceClient()
