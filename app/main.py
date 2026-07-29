@@ -1,27 +1,32 @@
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-from google.adk.plugins import ReflectAndRetryToolPlugin
-from uuid import uuid4
 import asyncio
 import json
 from pathlib import Path
+from uuid import uuid4
+
 from dotenv import load_dotenv
+from google.adk.plugins import ReflectAndRetryToolPlugin
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from loguru import logger
 
-from app.runner.runner import run_stage
-from app.models.quants_models import Ticker, Dossier
+from app.agents.investors.investors_orchestrator_agent.agent import (
+    investors_orchestrator_agent,
+)
+from app.agents.management.portfolio_manager_agent.agent import portfolio_manager_agent
+from app.agents.quants.quants_orchestrator_agent.agent import (
+    build_quants_orchestrator_agent,
+)
+from app.clients.trading212_client import Trading212Client
 from app.models.investors_models import CIOOutput
 from app.models.management_models import PortfolioManagerOutput
-from app.agents.quants.quants_orchestrator_agent.agent import build_quants_orchestrator_agent
-from app.agents.investors.investors_orchestrator_agent.agent import investors_orchestrator_agent
-from app.agents.management.portfolio_manager_agent.agent import portfolio_manager_agent
-from app.clients.trading212_client import Trading212Client
+from app.models.quants_models import Dossier, Ticker
 from app.models.trading212_models import (
-    MarketOrderPayload,
     LimitOrderPayload,
+    MarketOrderPayload,
     StopLimitOrderPayload,
 )
+from app.runner.runner import run_stage
 from app.utils.ticker_utils import load_watchlist
 
 load_dotenv(".env.local")
