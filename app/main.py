@@ -28,7 +28,6 @@ from app.models.trading212_models import (
 )
 from app.runner.runner import run_stage
 from app.services.watchlist_service import WatchlistService
-from app.utils.ticker_utils import load_watchlist
 
 load_dotenv(".env.local")
 
