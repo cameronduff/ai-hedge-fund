@@ -1,19 +1,30 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
+from loguru import logger
 
 from app.clients.trading212_client import Trading212Client
 from app.clients.yfinance_client import YFinanceClient
+from app.models.quants_models import Ticker
 
 
-class WatchlistService():
-    def __init__(self):
+class WatchlistService:
+    def __init__(self, tickers_path: str = "app/tickers.csv"):
         """
         Initializes the WatchlistService and loads the watchlist from a CSV file.
         """
-        self.watchlist = pd.read_csv("app/tickers.csv")
-        self.watchlist = self.watchlist.dropna()
-    
-    def get_existing_traded_instruments(self):
+        self.tickers_path = tickers_path
+        try:
+            self.watchlist = pd.read_csv(tickers_path)
+            self.watchlist = self.watchlist.dropna()
+        except Exception as e:
+            logger.error(f"Error loading watchlist from {tickers_path}: {e}")
+            self.watchlist = pd.DataFrame(
+                columns=["name", "trading212_ticker", "yfinance_ticker", "active"]
+            )
+        self.yfinance_client = YFinanceClient()
+        self.trading212_client = Trading212Client()
+
+    def get_existing_traded_instruments(self) -> set[str]:
         """
         Fetches all currently traded instruments and pending orders from Trading212.
 
@@ -21,26 +32,39 @@ class WatchlistService():
             set: A set of tickers for instruments that are either held or have pending orders.
         """
         current_stock_interest = set()
-    
-        trading212_client = Trading212Client()
-        instruments = trading212_client.fetch_all_open_positions()
-        
-        for stock in instruments:
-            instrument = stock.get('instrument')
-            ticker = instrument.get('ticker')
-            if ticker:
-                current_stock_interest.add(ticker)
-        
-        pending_orders = trading212_client.get_all_pending_orders()
-        
-        for order in pending_orders:
-            ticker = order.get('ticker')
-            if ticker:
-                current_stock_interest.add(ticker)
-        
+
+        try:
+            instruments = self.trading212_client.fetch_all_open_positions()
+            if isinstance(instruments, list):
+                for stock in instruments:
+                    if isinstance(stock, dict):
+                        instrument = stock.get("instrument")
+                        ticker = (
+                            instrument.get("ticker")
+                            if isinstance(instrument, dict)
+                            else stock.get("ticker")
+                        )
+                        if ticker:
+                            current_stock_interest.add(ticker)
+        except Exception as e:
+            logger.error(f"Error fetching open positions from Trading212: {e}")
+
+        try:
+            pending_orders = self.trading212_client.get_all_pending_orders()
+            if isinstance(pending_orders, list):
+                for order in pending_orders:
+                    if isinstance(order, dict):
+                        ticker = order.get("ticker")
+                        if ticker:
+                            current_stock_interest.add(ticker)
+        except Exception as e:
+            logger.error(f"Error fetching pending orders from Trading212: {e}")
+
         return current_stock_interest
-    
-    def get_day_moving_average_devation_percentage(self, yfinance_ticker: str, period: str = "50d") -> float:
+
+    def get_day_moving_average_devation_percentage(
+        self, yfinance_ticker: str, period: str = "50d"
+    ) -> float | None:
         """
         Calculates the percentage deviation of the current price from its moving average.
 
@@ -51,16 +75,35 @@ class WatchlistService():
             period (str): The period for calculating the moving average (default "50d").
 
         Returns:
-            float: The percentage deviation.
+            float | None: The percentage deviation, or None if calculation fails.
         """
-        yfinance_client = YFinanceClient()
-        historical_data = yfinance_client.get_historical_data(ticker=yfinance_ticker, period=period)
-        ma = historical_data['Close'].mean()
-        current_price = yfinance_client.get_current_price(ticker=yfinance_ticker)
+        try:
+            historical_data = self.yfinance_client.get_historical_data(
+                ticker=yfinance_ticker, period=period
+            )
+            if (
+                historical_data is None
+                or historical_data.empty
+                or "Close" not in historical_data
+            ):
+                return None
 
-        return round((current_price - ma) / ma * 100, 2)
+            ma = historical_data["Close"].mean()
+            current_price = self.yfinance_client.get_current_price(
+                ticker=yfinance_ticker
+            )
 
-    def get_rsi(self, yfinance_ticker: str, period: int = 14) -> float:
+            if current_price is None or pd.isna(ma) or ma == 0:
+                return None
+
+            return round((float(current_price) - float(ma)) / float(ma) * 100, 2)
+        except Exception as e:
+            logger.warning(
+                f"Failed to calculate MA deviation for {yfinance_ticker}: {e}"
+            )
+            return None
+
+    def get_rsi(self, yfinance_ticker: str, period: int = 14) -> float | None:
         """
         Calculates the Relative Strength Index (RSI) using Wilder's smoothed moving average.
 
@@ -72,34 +115,56 @@ class WatchlistService():
             period (int): The period for RSI calculation (default 14).
 
         Returns:
-            float: The current RSI value.
+            float | None: The current RSI value, or None if calculation fails.
         """
-        yfinance_client = YFinanceClient()
-        historical_data = yfinance_client.get_historical_data(ticker=yfinance_ticker, period="3mo")
-        close = historical_data["Close"].values
+        try:
+            historical_data = self.yfinance_client.get_historical_data(
+                ticker=yfinance_ticker, period="3mo"
+            )
+            if (
+                historical_data is None
+                or historical_data.empty
+                or "Close" not in historical_data
+            ):
+                return None
 
-        delta = np.diff(close, prepend=np.nan)
-        gain = np.where(delta > 0, delta, 0.0)
-        loss = np.where(delta < 0, -delta, 0.0)
+            close = historical_data["Close"].dropna().values
+            if len(close) <= period:
+                return None
 
-        avg_gain = np.full(len(close), np.nan)
-        avg_loss = np.full(len(close), np.nan)
+            delta = np.diff(close, prepend=np.nan)
+            gain = np.where(delta > 0, delta, 0.0)
+            loss = np.where(delta < 0, -delta, 0.0)
 
-        # Seed at position 14 with simple mean of first 14 periods
-        avg_gain[period] = gain[1:period + 1].mean()
-        avg_loss[period] = loss[1:period + 1].mean()
+            avg_gain = np.full(len(close), np.nan)
+            avg_loss = np.full(len(close), np.nan)
 
-        # Wilder smoothing from period+1 onwards
-        for i in range(period + 1, len(close)):
-            avg_gain[i] = (avg_gain[i - 1] * (period - 1) + gain[i]) / period
-            avg_loss[i] = (avg_loss[i - 1] * (period - 1) + loss[i]) / period
+            # Seed at position period with simple mean of first 'period' deltas
+            avg_gain[period] = gain[1 : period + 1].mean()
+            avg_loss[period] = loss[1 : period + 1].mean()
 
-        rs = avg_gain / avg_loss
-        rsi = 100 - (100 / (1 + rs))
+            # Wilder smoothing from period+1 onwards
+            for i in range(period + 1, len(close)):
+                avg_gain[i] = (avg_gain[i - 1] * (period - 1) + gain[i]) / period
+                avg_loss[i] = (avg_loss[i - 1] * (period - 1) + loss[i]) / period
 
-        return round(rsi[-1], 1)
-    
-    def get_price_to_earnings_ratio(self, yfinance_ticker: str):
+            last_gain = avg_gain[-1]
+            last_loss = avg_loss[-1]
+
+            if pd.isna(last_gain) or pd.isna(last_loss):
+                return None
+            if last_loss == 0:
+                return 100.0 if last_gain > 0 else 50.0
+
+            rs = last_gain / last_loss
+            rsi = 100.0 - (100.0 / (1.0 + rs))
+
+            return round(float(rsi), 1)
+        except Exception as e:
+            logger.warning(f"Failed to calculate RSI for {yfinance_ticker}: {e}")
+            return None
+
+    def get_price_to_earnings_ratio(self, yfinance_ticker: str) -> float | None:
         """
         Fetches the trailing Price-to-Earnings (P/E) ratio for a ticker.
 
@@ -109,15 +174,21 @@ class WatchlistService():
             yfinance_ticker (str): The Yahoo Finance ticker symbol.
 
         Returns:
-            float: The trailing P/E ratio.
+            float | None: The trailing P/E ratio, or None if unavailable.
         """
-        yfinance_client = YFinanceClient()
-        info = yfinance_client.get_info_by_ticker(ticker=yfinance_ticker)
+        try:
+            info = self.yfinance_client.get_info_by_ticker(ticker=yfinance_ticker)
+            if not isinstance(info, dict):
+                return None
+            pe_ratio = info.get("trailingPE")
+            if pe_ratio is None or pd.isna(pe_ratio):
+                return None
+            return round(float(pe_ratio), 2)
+        except Exception as e:
+            logger.warning(f"Failed to fetch P/E for {yfinance_ticker}: {e}")
+            return None
 
-        pe_ratio = round(info.get("trailingPE"), 2)
-        return pe_ratio
-    
-    def get_debt_equity_ratio(self, yfinance_ticker: str):
+    def get_debt_equity_ratio(self, yfinance_ticker: str) -> float | None:
         """
         Calculates the Debt-to-Equity (D/E) ratio for a ticker.
 
@@ -130,20 +201,31 @@ class WatchlistService():
             yfinance_ticker (str): The Yahoo Finance ticker symbol.
 
         Returns:
-            float | None: The Debt-to-Equity ratio, or None if equity is zero.
+            float | None: The Debt-to-Equity ratio, or None if unavailable or equity is zero.
         """
+        try:
+            balance_sheet = self.yfinance_client.get_balance_sheet_by_ticker(
+                yfinance_ticker
+            )
+            if balance_sheet is None or balance_sheet.empty:
+                return None
+            if (
+                "Total Debt" not in balance_sheet.index
+                or "Stockholders Equity" not in balance_sheet.index
+            ):
+                return None
 
-        yfinance_client = YFinanceClient()
-        balance_sheet = yfinance_client.get_balance_sheet_by_ticker(yfinance_ticker)
+            total_debt = balance_sheet.loc["Total Debt"].iloc[0]
+            equity = balance_sheet.loc["Stockholders Equity"].iloc[0]
 
-        total_debt = balance_sheet.loc["Total Debt"].iloc[0]
-        equity = balance_sheet.loc["Stockholders Equity"].iloc[0]
+            if pd.isna(total_debt) or pd.isna(equity) or equity == 0:
+                return None
 
-        if equity == 0:
+            return round(float(total_debt / equity), 2)
+        except Exception as e:
+            logger.warning(f"Failed to calculate D/E for {yfinance_ticker}: {e}")
             return None
 
-        return round(total_debt / equity, 2)
-    
     def get_analyst_upside(self, yfinance_ticker: str) -> float | None:
         """
         Calculates the percentage upside based on analyst price targets.
@@ -156,19 +238,37 @@ class WatchlistService():
         Returns:
             float | None: The percentage upside, or None if targets or price are unavailable.
         """
-        yfinance_client = YFinanceClient()
+        try:
+            targets = self.yfinance_client.get_analyst_price_targets(
+                ticker=yfinance_ticker
+            )
+            if not isinstance(targets, dict):
+                return None
+            mean_target = targets.get("mean")
+            current_price = self.yfinance_client.get_current_price(
+                ticker=yfinance_ticker
+            )
 
-        targets = yfinance_client.get_analyst_price_targets(ticker=yfinance_ticker)
-        mean_target = targets.get("mean")
+            if (
+                not mean_target
+                or not current_price
+                or pd.isna(mean_target)
+                or pd.isna(current_price)
+            ):
+                return None
 
-        current_price = yfinance_client.get_current_price(ticker=yfinance_ticker)
-
-        if not mean_target or not current_price:
+            return round(
+                ((float(mean_target) - float(current_price)) / float(current_price))
+                * 100,
+                2,
+            )
+        except Exception as e:
+            logger.warning(
+                f"Failed to calculate analyst upside for {yfinance_ticker}: {e}"
+            )
             return None
-        
-        return round(((mean_target - current_price) / current_price) * 100, 2)
-    
-    def get_revenue_growth(self, yfinance_ticker: str):
+
+    def get_revenue_growth(self, yfinance_ticker: str) -> float | None:
         """
         Calculates the year-over-year quarterly revenue growth.
 
@@ -180,20 +280,46 @@ class WatchlistService():
         Returns:
             float | None: The percentage revenue growth, or None if prior year data is unavailable.
         """
-        yfinance_client = YFinanceClient()
-        income_stmt = yfinance_client.get_quarterly_income_statement(ticker=yfinance_ticker)
-        
-        revenue = income_stmt.loc["Total Revenue"]
-        
-        current_quarter = revenue.iloc[0]       # most recent
-        prior_year_quarter = revenue.iloc[4]    # same quarter last year
-        
-        if prior_year_quarter == 0:
-            return None
-            
-        return round(((current_quarter - prior_year_quarter) / abs(prior_year_quarter)) * 100, 2)
+        try:
+            income_stmt = self.yfinance_client.get_quarterly_income_statement(
+                ticker=yfinance_ticker
+            )
+            if (
+                income_stmt is None
+                or income_stmt.empty
+                or "Total Revenue" not in income_stmt.index
+            ):
+                return None
 
-    def get_earnings_date(self, yfinance_ticker: str):
+            revenue = income_stmt.loc["Total Revenue"]
+            if len(revenue) < 5:
+                return None
+
+            current_quarter = revenue.iloc[0]
+            prior_year_quarter = revenue.iloc[4]
+
+            if (
+                pd.isna(current_quarter)
+                or pd.isna(prior_year_quarter)
+                or prior_year_quarter == 0
+            ):
+                return None
+
+            return round(
+                (
+                    (float(current_quarter) - float(prior_year_quarter))
+                    / abs(float(prior_year_quarter))
+                )
+                * 100,
+                2,
+            )
+        except Exception as e:
+            logger.warning(
+                f"Failed to calculate revenue growth for {yfinance_ticker}: {e}"
+            )
+            return None
+
+    def get_earnings_date(self, yfinance_ticker: str) -> int | None:
         """
         Calculates the number of days until the next expected earnings date.
 
@@ -205,19 +331,271 @@ class WatchlistService():
         Returns:
             int | None: Days until earnings, or None if no earnings date is found.
         """
-        yfinance_client = YFinanceClient()
-        calendar = yfinance_client.get_calendar(ticker=yfinance_ticker)
-        earnings_dates = calendar.get("Earnings Date")
+        try:
+            calendar = self.yfinance_client.get_calendar(ticker=yfinance_ticker)
+            if calendar is None:
+                return None
 
-        if not earnings_dates:
+            earnings_dates = None
+            if isinstance(calendar, dict):
+                earnings_dates = calendar.get("Earnings Date")
+            elif hasattr(calendar, "loc") and "Earnings Date" in calendar.index:
+                earnings_dates = calendar.loc["Earnings Date"].tolist()
+
+            if not earnings_dates or len(earnings_dates) == 0:
+                return None
+
+            next_earnings = pd.Timestamp(earnings_dates[0])
+            if pd.isna(next_earnings):
+                return None
+
+            today = (
+                pd.Timestamp.now(tz=next_earnings.tz)
+                if next_earnings.tz is not None
+                else pd.Timestamp.now()
+            )
+            return int((next_earnings - today).days)
+        except Exception as e:
+            logger.warning(
+                f"Failed to calculate earnings date for {yfinance_ticker}: {e}"
+            )
             return None
 
-        # Take the first date (start of the expected window)
-        next_earnings = pd.Timestamp(earnings_dates[0])
-        today = pd.Timestamp.now(tz=next_earnings.tz)
-        days_until = (next_earnings - today).days
+    def evaluate_ticker(
+        self,
+        yfinance_ticker: str,
+        min_rsi: float = 30.0,
+        max_rsi: float = 70.0,
+        max_pe: float = 35.0,
+        max_debt_equity: float = 2.0,
+        min_analyst_upside: float = 10.0,
+        min_revenue_growth: float = 5.0,
+        min_earnings_days: int = 14,
+        min_ma_deviation: float | None = None,
+        strict: bool = False,
+    ) -> dict:
+        """
+        Evaluates a ticker against quantitative and fundamental screening criteria.
 
-        return days_until
+        Args:
+            yfinance_ticker (str): The Yahoo Finance ticker symbol.
+            min_rsi (float): Minimum acceptable RSI (default 30.0).
+            max_rsi (float): Maximum acceptable RSI (default 70.0).
+            max_pe (float): Maximum trailing P/E ratio (default 35.0).
+            max_debt_equity (float): Maximum Debt-to-Equity ratio (default 2.0).
+            min_analyst_upside (float): Minimum analyst target upside percentage (default 10.0).
+            min_revenue_growth (float): Minimum YoY quarterly revenue growth percentage (default 5.0).
+            min_earnings_days (int): Minimum days until next earnings release (default 14).
+            min_ma_deviation (float | None): Optional minimum MA deviation percentage.
+            strict (bool): If True, requires all metrics to be present. If False, requires available metrics to pass.
+
+        Returns:
+            dict: Dictionary with keys 'passed', 'metrics', 'passed_checks', 'failed_checks'.
+        """
+        rsi = self.get_rsi(yfinance_ticker)
+        pe_ratio = self.get_price_to_earnings_ratio(yfinance_ticker)
+        debt_equity = self.get_debt_equity_ratio(yfinance_ticker)
+        analyst_upside = self.get_analyst_upside(yfinance_ticker)
+        revenue_growth = self.get_revenue_growth(yfinance_ticker)
+        earnings_days = self.get_earnings_date(yfinance_ticker)
+        ma_deviation = self.get_day_moving_average_devation_percentage(yfinance_ticker)
+
+        metrics = {
+            "rsi": rsi,
+            "pe_ratio": pe_ratio,
+            "debt_equity": debt_equity,
+            "analyst_upside": analyst_upside,
+            "revenue_growth": revenue_growth,
+            "earnings_days": earnings_days,
+            "ma_deviation": ma_deviation,
+        }
+
+        passed_checks = []
+        failed_checks = []
+
+        # 1. RSI (30 <= rsi <= 70)
+        if rsi is not None:
+            if min_rsi <= rsi <= max_rsi:
+                passed_checks.append(f"RSI {rsi} in [{min_rsi}, {max_rsi}]")
+            else:
+                failed_checks.append(f"RSI {rsi} not in [{min_rsi}, {max_rsi}]")
+        elif strict:
+            failed_checks.append("RSI missing")
+
+        # 2. P/E (0 < pe <= 35)
+        if pe_ratio is not None:
+            if 0 < pe_ratio <= max_pe:
+                passed_checks.append(f"P/E {pe_ratio} <= {max_pe}")
+            else:
+                failed_checks.append(f"P/E {pe_ratio} > {max_pe} or <= 0")
+        elif strict:
+            failed_checks.append("P/E missing")
+
+        # 3. Debt to Equity (d/e <= 2)
+        if debt_equity is not None:
+            if 0 <= debt_equity <= max_debt_equity:
+                passed_checks.append(f"D/E {debt_equity} <= {max_debt_equity}")
+            else:
+                failed_checks.append(f"D/E {debt_equity} > {max_debt_equity}")
+        elif strict:
+            failed_checks.append("D/E missing")
+
+        # 4. Analyst Upside (upside >= 10%)
+        if analyst_upside is not None:
+            if analyst_upside >= min_analyst_upside:
+                passed_checks.append(
+                    f"Analyst Upside {analyst_upside}% >= {min_analyst_upside}%"
+                )
+            else:
+                failed_checks.append(
+                    f"Analyst Upside {analyst_upside}% < {min_analyst_upside}%"
+                )
+        elif strict:
+            failed_checks.append("Analyst Upside missing")
+
+        # 5. Revenue Growth (growth >= 5%)
+        if revenue_growth is not None:
+            if revenue_growth >= min_revenue_growth:
+                passed_checks.append(
+                    f"Revenue Growth {revenue_growth}% >= {min_revenue_growth}%"
+                )
+            else:
+                failed_checks.append(
+                    f"Revenue Growth {revenue_growth}% < {min_revenue_growth}%"
+                )
+        elif strict:
+            failed_checks.append("Revenue Growth missing")
+
+        # 6. Earnings Date (> 14 days away)
+        if earnings_days is not None:
+            if earnings_days < 0 or earnings_days > min_earnings_days:
+                passed_checks.append(
+                    f"Earnings {earnings_days} days away (> {min_earnings_days}d)"
+                )
+            else:
+                failed_checks.append(
+                    f"Earnings in {earnings_days} days (<= {min_earnings_days}d)"
+                )
+        elif strict:
+            failed_checks.append("Earnings Date missing")
+
+        # 7. MA Deviation (optional)
+        if min_ma_deviation is not None:
+            if ma_deviation is not None:
+                if ma_deviation >= min_ma_deviation:
+                    passed_checks.append(
+                        f"MA Deviation {ma_deviation}% >= {min_ma_deviation}%"
+                    )
+                else:
+                    failed_checks.append(
+                        f"MA Deviation {ma_deviation}% < {min_ma_deviation}%"
+                    )
+            elif strict:
+                failed_checks.append("MA Deviation missing")
+
+        passed = len(failed_checks) == 0 and len(passed_checks) > 0
+
+        return {
+            "ticker": yfinance_ticker,
+            "passed": passed,
+            "metrics": metrics,
+            "passed_checks": passed_checks,
+            "failed_checks": failed_checks,
+        }
+
+    def filter_watchlist(
+        self,
+        candidates: list[Ticker] | None = None,
+        max_tickers: int | None = None,
+        include_traded_instruments: bool = True,
+        **filter_kwargs,
+    ) -> list[Ticker]:
+        """
+        Filters candidate tickers down based on quantitative and fundamental screening criteria before passing to quants.
+
+        Args:
+            candidates (list[Ticker] | None): Optional list of candidate Tickers. Defaults to watchlist CSV.
+            max_tickers (int | None): Maximum number of filtered tickers to return.
+            include_traded_instruments (bool): Whether to include currently open positions / pending orders from Trading212.
+            **filter_kwargs: Threshold overrides for screening criteria.
+
+        Returns:
+            list[Ticker]: Filtered list of Ticker objects ready for quant analysis.
+        """
+        if candidates is None:
+            active_df = self.watchlist[self.watchlist["active"] == True]
+            df_to_use = active_df if not active_df.empty else self.watchlist
+
+            candidates = [
+                Ticker(
+                    name=str(row["name"]),
+                    trading212_ticker=str(row["trading212_ticker"]),
+                    yfinance_ticker=str(row["yfinance_ticker"]),
+                )
+                for _, row in df_to_use.iterrows()
+            ]
+
+        traded_tickers: set[str] = set()
+        if include_traded_instruments:
+            traded_tickers = self.get_existing_traded_instruments()
+            logger.info(
+                f"Retrieved {len(traded_tickers)} currently traded/pending instruments from Trading212"
+            )
+
+        filtered_stocks: list[Ticker] = []
+        seen_tickers: set[str] = set()
+
+        for ticker in candidates:
+            if max_tickers and len(filtered_stocks) >= max_tickers:
+                break
+
+            if ticker.trading212_ticker in seen_tickers:
+                continue
+
+            # Prioritize/include actively held or pending orders
+            if ticker.trading212_ticker in traded_tickers:
+                logger.info(
+                    f"Including existing traded instrument: {ticker.trading212_ticker}"
+                )
+                filtered_stocks.append(ticker)
+                seen_tickers.add(ticker.trading212_ticker)
+                continue
+
+            eval_result = self.evaluate_ticker(ticker.yfinance_ticker, **filter_kwargs)
+            if eval_result["passed"]:
+                logger.info(
+                    f"Ticker {ticker.yfinance_ticker} passed screening: "
+                    f"{', '.join(eval_result['passed_checks'])}"
+                )
+                filtered_stocks.append(ticker)
+                seen_tickers.add(ticker.trading212_ticker)
+            else:
+                logger.debug(
+                    f"Ticker {ticker.yfinance_ticker} filtered out: "
+                    f"{', '.join(eval_result['failed_checks'])}"
+                )
+
+        logger.info(
+            f"Screening complete: {len(filtered_stocks)} tickers selected for Quants"
+        )
+        return filtered_stocks
+
+    def get_filtered_watchlist(self, **kwargs) -> list[Ticker]:
+        """
+        Convenience alias for filter_watchlist.
+        """
+        return self.filter_watchlist(**kwargs)
+
 
 if __name__ == "__main__":
-    yfinance_ticker = "AAPL"
+    service = WatchlistService()
+    results = service.filter_watchlist(
+        candidates=[
+            Ticker(name="Apple", trading212_ticker="AAPL_US_EQ", yfinance_ticker="AAPL"),
+            Ticker(name="Alphabet", trading212_ticker="GOOGL_US_EQ", yfinance_ticker="GOOGL"),
+            Ticker(name="NVIDIA", trading212_ticker="NVDA_US_EQ", yfinance_ticker="NVDA"),
+            Ticker(name="Microsoft", trading212_ticker="MSFT_US_EQ", yfinance_ticker="MSFT"),
+        ]
+    )
+    for stock in results:
+        print(f"Selected: {stock.name} ({stock.yfinance_ticker})")

@@ -27,6 +27,7 @@ from app.models.trading212_models import (
     StopLimitOrderPayload,
 )
 from app.runner.runner import run_stage
+from app.services.watchlist_service import WatchlistService
 from app.utils.ticker_utils import load_watchlist
 
 load_dotenv(".env.local")
@@ -36,9 +37,10 @@ USER_ID = str(uuid4())
 OUTPUT_DIR = Path("outputs")
 OUTPUT_DIR.mkdir(exist_ok=True)
 
-STOCKS = load_watchlist()
+watchlist_service = WatchlistService()
+STOCKS = watchlist_service.filter_watchlist()
 
-logger.info(f"Loaded {len(STOCKS)} tickers")
+logger.info(f"Filtered watchlist to {len(STOCKS)} active candidates for Quant Analysis")
 
 session_service = InMemorySessionService()
 
