@@ -33,6 +33,28 @@ Approved trades are passed to a deterministic Python layer in the main runner. T
 
 ---
 
+## 🤖 ADK Agents Hierarchy & Architecture
+
+1. **Stage 1: Quantitative Analysis (`QuantsOrchestratorAgent`)**
+   - **Root**: `build_quants_orchestrator_agent` (`SequentialAgent`).
+   - **Per-Ticker Pipeline**: Runs `QuantsTeam` (`ParallelAgent`) evaluating Fundamentals, Technicals, Growth, and Valuations in parallel pairs (`raw_agent` reasoning + `formatter_agent` structured output).
+   - **Aggregation**: Outputs are combined via `QuantsAggregatorAgent` (`BaseAgent`) per ticker and unified by `DossierAggregatorAgent` (`BaseAgent`) into the master dossier.
+
+2. **Stage 2: Investor Boardroom (`InvestorsOrchestratorAgent`)**
+   - **Root**: `investors_orchestrator_agent` (`SequentialAgent`).
+   - **Debate & Synthesis**: `chief_investment_officer_debater` (`LlmAgent`) dynamically calls 13 investor persona agents via `AgentTool` (Value Legends, Growth Visionaries, and Macro/Risk Specialists).
+   - **Formatting**: `chief_investment_officer_formatter` (`LlmAgent`) structures the debate into type-safe ratings and conviction scores (`CIOOutput`).
+
+3. **Stage 3: Portfolio Management & Risk Gatekeeper (`PortfolioManagerAgent`)**
+   - **Root**: `portfolio_manager_agent` (`SequentialAgent`).
+   - **Decision & Risk Check**: `portfolio_manager` (`LlmAgent`) synthesizes the CIO's ratings and queries `risk_manager_agent` (`LlmAgent`) via `AgentTool` for position sizing, portfolio concentration, and volatility clearance.
+   - **Formatting**: `porfolio_manager_formatter_agent` (`LlmAgent`) emits final validated trade instructions (`PortfolioManagerOutput`).
+
+4. **Stage 4: Deterministic Trade Execution**
+   - Pure Python execution engine in `main.py` directly executes risk-approved orders via `Trading212Client`.
+
+---
+
 ## 📂 Project Structure
 
 -   **`app/agents/`**: The cognitive core. Contains the Quants, Investors, and Management agents.
@@ -73,7 +95,7 @@ TRADING_212_API_KEY=your_t212_api_key
 TRADING_212_API_SECRET=your_t212_api_secret
 
 # Optional: Override default models
-REASONING_MODEL=gemini-3.1-pro-preview
+REASONING_MODEL=gemini-3.5-flash
 FORMATTING_MODEL=gemini-2.5-flash
 ```
 
