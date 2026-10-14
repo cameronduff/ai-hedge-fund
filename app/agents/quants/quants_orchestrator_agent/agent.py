@@ -6,6 +6,7 @@ from app.agents.quants.fundamentals_agent.agent import build_fundamentals_agent
 from app.agents.quants.technicals_agent.agent import build_technicals_agent
 from app.agents.quants.growth_agent.agent import build_growth_agent
 from app.agents.quants.valuations_agent.agent import build_valuations_agent
+from app.agents.quants.news_agent.agent import build_news_agent
 from app.agents.quants.quants_aggregator_agent.agent import QuantsAggregatorAgent, DossierAggregatorAgent
 from app.models.quants_models import Ticker, Dossier
 
@@ -24,6 +25,7 @@ def build_ticker_pipeline(ticker: Ticker) -> SequentialAgent:
             build_technicals_agent(yf_symbol),
             build_growth_agent(yf_symbol),
             build_valuations_agent(yf_symbol),
+            build_news_agent(yf_symbol, ticker.name),
         ]
     )
 

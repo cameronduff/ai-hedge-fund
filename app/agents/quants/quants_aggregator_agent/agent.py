@@ -5,7 +5,16 @@ import json
 from typing import List
 from loguru import logger
 
-from app.models.quants_models import FundamentalsAgentOutput, TechnicalAgentOutput, GrowthAgentOutput, ValuationAgentOutput, TickerDossier, Ticker, Dossier
+from app.models.quants_models import (
+    FundamentalsAgentOutput,
+    TechnicalAgentOutput,
+    GrowthAgentOutput,
+    ValuationAgentOutput,
+    NewsAgentOutput,
+    TickerDossier,
+    Ticker,
+    Dossier,
+)
 
 class QuantsAggregatorAgent(BaseAgent):
     ticker: Ticker
@@ -45,11 +54,20 @@ class QuantsAggregatorAgent(BaseAgent):
             except Exception as e:
                 logger.warning(f"Error parsing valuations for {ticker_name}: {e}")
 
+        news = None
+        news_key = f"news_agent_output_{ticker_name}"
+        if news_key in ctx.session.state and ctx.session.state[news_key]:
+            try:
+                news = NewsAgentOutput.model_validate(ctx.session.state[news_key])
+            except Exception as e:
+                logger.warning(f"Error parsing news for {ticker_name}: {e}")
+
         final = TickerDossier(
             fundamentals=fundamentals, 
             technicals=technicals, 
             growth=growth, 
-            valuations=valuations
+            valuations=valuations,
+            news=news,
         )
 
         yield Event(

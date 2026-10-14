@@ -131,11 +131,57 @@ class ValuationAgentOutput(BaseModel):
     )
 
 
+class NewsArticle(BaseModel):
+    title: str = Field(..., description="Headline of the news article")
+    publisher: str = Field(default="Unknown", description="Source or publisher of the article")
+    published_at: str = Field(default="Recent", description="Publication date or timestamp")
+    link: str = Field(default="", description="URL of the news article")
+
+
+class NewsMetrics(BaseModel):
+    sentiment_score: float = Field(
+        ..., description="Aggregate news sentiment score ranging from -1.0 (strongly bearish) to +1.0 (strongly bullish)"
+    )
+    sentiment_label: str = Field(
+        ..., description="Sentiment category: 'BULLISH', 'NEUTRAL', or 'BEARISH'"
+    )
+    confidence: float = Field(
+        default=0.8, description="Confidence level in the sentiment analysis (0.0 to 1.0)"
+    )
+    major_catalysts: List[str] = Field(
+        default_factory=list, description="Recent material positive catalysts (e.g. product releases, earnings beats, contracts)"
+    )
+    risk_factors: List[str] = Field(
+        default_factory=list, description="Material negative headwinds, regulatory probes, lawsuits, or governance concerns"
+    )
+
+
+class NewsAgentOutput(BaseModel):
+    trading212_ticker: str = Field(
+        ..., description="The Trading 212 ticker for the evaluation in question"
+    )
+    yfinance_ticker: str = Field(
+        ..., description="The Yahoo Finance ticker for the evaluation in question"
+    )
+    metrics: NewsMetrics = Field(
+        ..., description="Structured news sentiment metrics and catalyst analysis"
+    )
+    key_articles: List[NewsArticle] = Field(
+        default_factory=list, description="Most relevant recent news articles reviewed"
+    )
+    summary: str = Field(
+        ..., description="Concise qualitative summary of current media narrative and business developments"
+    )
+
+
 class TickerDossier(BaseModel):
     fundamentals: FundamentalsAgentOutput = Field(...)
     technicals: TechnicalAgentOutput = Field(...)
     growth: GrowthAgentOutput = Field(...)
     valuations: ValuationAgentOutput = Field(...)
+    news: Optional[NewsAgentOutput] = Field(
+        default=None, description="Recent news sentiment, catalysts, and qualitative risk analysis"
+    )
 
 class Dossier(BaseModel):
     final_dossier: List[TickerDossier]

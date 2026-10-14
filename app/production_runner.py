@@ -103,7 +103,19 @@ def generate_executive_summary(
     # Watchlist Evaluated
     md.append("## 2. Watchlist Candidates Analyzed")
     for s in stocks:
-        md.append(f"- **{s.name}** (`{s.trading212_ticker}` | Yahoo: `{s.yfinance_ticker}`)")
+        news_line = ""
+        catalysts_line = ""
+        if dossier and dossier.final_dossier:
+            for td in dossier.final_dossier:
+                if td.fundamentals and td.fundamentals.yfinance_ticker == s.yfinance_ticker and td.news:
+                    metrics = td.news.metrics
+                    news_line = f" | News Sentiment: **{metrics.sentiment_label}** ({metrics.sentiment_score:+.2f}, Conf: {metrics.confidence:.0%})"
+                    if metrics.major_catalysts:
+                        catalysts_line += f"\n  - *Catalysts:* {', '.join(metrics.major_catalysts[:3])}"
+                    if metrics.risk_factors:
+                        catalysts_line += f"\n  - *Headwinds/Risks:* {', '.join(metrics.risk_factors[:3])}"
+                    break
+        md.append(f"- **{s.name}** (`{s.trading212_ticker}` | Yahoo: `{s.yfinance_ticker}`){news_line}{catalysts_line}")
     md.append("\n---\n")
 
     # CIO Decisions

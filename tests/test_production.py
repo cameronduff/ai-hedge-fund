@@ -95,3 +95,51 @@ def test_single_step_agents_and_hybrid_models():
     assert portfolio_manager_agent.output_schema == PortfolioManagerOutput
     assert portfolio_manager_agent.model == settings.DECISION_MODEL
 
+    # 3. News agent is single-step LlmAgent with NewsAgentOutput schema
+    from app.agents.quants.news_agent.agent import build_news_agent
+    from app.models.quants_models import NewsAgentOutput
+    na = build_news_agent("AAPL", "Apple")
+    assert isinstance(na, LlmAgent)
+    assert na.output_schema == NewsAgentOutput
+    assert na.model == settings.QUANTS_MODEL
+
+
+def test_news_tools_and_schema():
+    from app.tools.news_tools import get_company_news, search_market_news
+    from app.models.quants_models import NewsAgentOutput, NewsMetrics, NewsArticle
+
+    # 1. Test live tool fetching
+    articles = get_company_news("AAPL", "Apple")
+    assert isinstance(articles, list)
+    if articles:
+        assert "title" in articles[0]
+        assert "publisher" in articles[0]
+
+    rss_articles = search_market_news("Apple revenue", max_results=2)
+    assert isinstance(rss_articles, list)
+
+    # 2. Test schema validation
+    dummy_output = NewsAgentOutput(
+        trading212_ticker="AAPL_US_EQ",
+        yfinance_ticker="AAPL",
+        metrics=NewsMetrics(
+            sentiment_score=0.45,
+            sentiment_label="BULLISH",
+            confidence=0.85,
+            major_catalysts=["New AI ecosystem launch", "Services revenue record"],
+            risk_factors=["EU antitrust digital markets compliance"],
+        ),
+        key_articles=[
+            NewsArticle(
+                title="Apple introduces new features",
+                publisher="Yahoo Finance",
+                published_at="2026-10-14",
+                link="https://finance.yahoo.com",
+            )
+        ],
+        summary="Positive sentiment supported by AI product releases and resilient services revenue.",
+    )
+    assert dummy_output.metrics.sentiment_label == "BULLISH"
+    assert dummy_output.metrics.sentiment_score == 0.45
+
+
