@@ -2,6 +2,7 @@ import argparse
 import asyncio
 import json
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
@@ -48,6 +49,7 @@ def generate_executive_summary(
     cio_output: CIOOutput | None,
     portfolio_output: PortfolioManagerOutput | None,
     executed_trades: list[dict],
+    api_stats: dict | None = None,
 ) -> str:
     """
     Builds a comprehensive, human-readable markdown summary of the weekly run.
@@ -65,6 +67,11 @@ def generate_executive_summary(
     md.append(f"**Timestamp:** `{run_timestamp}`  ")
     md.append(f"**Environment:** `{environment.upper()}` {'(DRY RUN - No Real Money)' if is_dry_run else '(LIVE EXECUTION)'}  ")
     md.append(f"**Model:** `{settings.REASONING_MODEL}` with Thinking  ")
+    if api_stats:
+        calls = api_stats.get("call_count", 0)
+        pacing = api_stats.get("pacing_seconds", 0.0)
+        duration = api_stats.get("duration", "N/A")
+        md.append(f"**API Usage & Budget:** `{calls}` LLM calls ({duration} total, {pacing:.1f}s rate-limit pacing applied, strictly ≤ 13.3 RPM)  ")
     md.append("\n---\n")
 
     # Account Overview
@@ -73,6 +80,7 @@ def generate_executive_summary(
     md.append(f"- **Available Cash:** {currency} {cash_val:,.2f}")
     if portfolio_output and portfolio_output.current_positions_summary:
         md.append(f"- **Holdings Overview:** {portfolio_output.current_positions_summary}")
+
     md.append("\n---\n")
 
     # Watchlist Evaluated
@@ -155,16 +163,20 @@ def run_hedge_fund(
 
     logger.info(f"Selected {len(stocks)} candidate stocks for analysis: {[s.yfinance_ticker for s in stocks]}")
 
+    start_time = time.time()
+
     # Shared Session & Plugins
     app_name = "ai_hedge_fund"
     user_id = str(uuid4())
     session_service = InMemorySessionService()
 
     # Plugins: Rate-limiting pacer ensures strict spacing between LLM calls to stay <= 13.3 RPM
+    pacer = RateLimitPacerPlugin(min_interval_seconds=settings.RATE_LIMIT_DELAY_SECONDS)
     plugins = [
-        RateLimitPacerPlugin(min_interval_seconds=settings.RATE_LIMIT_DELAY_SECONDS),
+        pacer,
         ReflectAndRetryToolPlugin(max_retries=3),
     ]
+
 
     # 3. Stage 1: Quant Analysis
     logger.info("=" * 60)
@@ -193,9 +205,31 @@ def run_hedge_fund(
     )
 
     dossier_json = state_1.get("dossier", "{}")
-    (runs_dir / "dossier.json").write_text(dossier_json)
-    dossier = Dossier.model_validate_json(dossier_json) if dossier_json != "{}" else None
+    if not dossier_json or dossier_json == "{}":
+        from app.models.quants_models import TickerDossier
+        reconstructed = []
+        for k, v in state_1.items():
+            if k.startswith("quants_final_output_") and v:
+                try:
+                    reconstructed.append(TickerDossier.model_validate_json(v))
+                except Exception:
+                    pass
+        if reconstructed:
+            dossier = Dossier(final_dossier=reconstructed)
+            dossier_json = dossier.model_dump_json()
+            logger.info(f"Reconstructed dossier with {len(reconstructed)} stocks from successful quant analyses.")
+        else:
+            dossier = None
+    else:
+        dossier = Dossier.model_validate_json(dossier_json)
+
+    (runs_dir / "dossier.json").write_text(dossier_json or "{}")
     logger.info(f"Quants analysis complete. Saved to {runs_dir / 'dossier.json'}")
+
+    if not dossier or not dossier.final_dossier:
+        logger.error("No valid stock quant analyses available. Halting pipeline before Stage 2.")
+        return
+
 
     # 4. Stage 2: Investors Boardroom
     logger.info("=" * 60)
@@ -352,12 +386,22 @@ def run_hedge_fund(
                 logger.error(f"Failed to place order for {instruction.trading212_ticker}: {e}")
                 trade_record["error"] = str(e)
                 executed_trades.append(trade_record)
+
+            # Pace orders to respect Trading 212 order API rate limits (1 req/sec)
+            time.sleep(2.0)
+
     else:
         logger.info("No trade instructions generated.")
 
     (runs_dir / "trades.json").write_text(json.dumps(executed_trades, indent=2))
 
     # 7. Generate Executive Summary
+    total_elapsed = time.time() - start_time
+    api_stats = {
+        "call_count": pacer.call_count,
+        "pacing_seconds": pacer.total_pacing_seconds,
+        "duration": f"{total_elapsed:.1f}s",
+    }
     summary_md = generate_executive_summary(
         run_timestamp=run_timestamp,
         environment=env_str,
@@ -368,9 +412,11 @@ def run_hedge_fund(
         cio_output=cio_output,
         portfolio_output=portfolio_output,
         executed_trades=executed_trades,
+        api_stats=api_stats,
     )
     (runs_dir / "executive_summary.md").write_text(summary_md)
     (Path("runs") / "latest_summary.md").write_text(summary_md)
+
 
     logger.info("=" * 60)
     logger.info(f"PIPELINE RUN COMPLETE — Report saved to {runs_dir / 'executive_summary.md'}")

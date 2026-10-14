@@ -17,7 +17,7 @@ Type=oneshot
 User=cd_server
 WorkingDirectory=/home/cd_server/repositories/ai-hedge-fund
 EnvironmentFile=/home/cd_server/repositories/ai-hedge-fund/.env.local
-ExecStart=/home/cd_server/repositories/ai-hedge-fund/scripts/run_weekly.sh --dry-run
+ExecStart=/home/cd_server/repositories/ai-hedge-fund/scripts/run_weekly.sh --live
 StandardOutput=journal
 StandardError=journal
 

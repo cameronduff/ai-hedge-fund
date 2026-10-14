@@ -20,7 +20,10 @@ class YFinanceClient:
 
     def get_options_chain(self, ticker: str):
         data = yf.Ticker(ticker)
+        if not data.options:
+            return None
         return data.option_chain(data.options[0]).calls
+
 
     def get_quarterly_income_statement(self, ticker: str):
         data = yf.Ticker(ticker)

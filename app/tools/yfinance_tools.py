@@ -1,6 +1,8 @@
+import json
 from datetime import date, datetime
 from loguru import logger
 from app.clients.yfinance_client import YFinanceClient
+
 
 yfinance_client = YFinanceClient()
 
@@ -95,7 +97,15 @@ def get_options_chain(ticker: str):
         str: A JSON string containing the options chain data.
     """
     logger.info(f"Calling get_options_chain(ticker='{ticker}')")
-    return yfinance_client.get_options_chain(ticker).to_json()
+    try:
+        chain = yfinance_client.get_options_chain(ticker)
+        if chain is None or (hasattr(chain, "empty") and chain.empty):
+            return json.dumps({"status": "no_options", "message": f"No options chain data available on Yahoo Finance for {ticker}"})
+        return chain.to_json()
+    except Exception as e:
+        logger.warning(f"Error fetching options chain for {ticker}: {e}")
+        return json.dumps({"status": "error", "message": f"Options chain unavailable for {ticker}: {str(e)}"})
+
 
 
 def get_quarterly_income_statement(ticker: str):
