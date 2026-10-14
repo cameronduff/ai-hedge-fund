@@ -34,6 +34,13 @@ class Settings(BaseSettings):
     MAX_POSITION_SIZE_PCT: float = Field(default=15.0, alias="MAX_POSITION_SIZE_PCT")
     MIN_CASH_RESERVE_PCT: float = Field(default=10.0, alias="MIN_CASH_RESERVE_PCT")
 
+    # Langfuse Observability
+    LANGFUSE_SECRET_KEY: str | None = Field(default=None, alias="LANGFUSE_SECRET_KEY")
+    LANGFUSE_PUBLIC_KEY: str | None = Field(default=None, alias="LANGFUSE_PUBLIC_KEY")
+    LANGFUSE_BASE_URL: str = Field(default="https://cloud.langfuse.com", alias="LANGFUSE_BASE_URL")
+    LANGFUSE_HOST: str = Field(default="https://cloud.langfuse.com", alias="LANGFUSE_HOST")
+
+
     @property
     def trading_212_base_url(self) -> str:
         if self.TRADING_212_ENVIRONMENT.strip().lower() == "live":

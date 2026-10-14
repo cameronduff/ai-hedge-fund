@@ -30,24 +30,29 @@ class RateLimitPacerPlugin(BasePlugin):
         self.last_call_timestamp: float = 0.0
         self.call_count: int = 0
         self.total_pacing_seconds: float = 0.0
+        self._lock: asyncio.Lock | None = None
 
     async def before_model_callback(
         self, *, callback_context: CallbackContext, llm_request: LlmRequest
     ) -> Optional[LlmResponse]:
-        self.call_count += 1
-        now = time.time()
-        elapsed = now - self.last_call_timestamp
-        if self.last_call_timestamp > 0 and elapsed < self.min_interval_seconds:
-            sleep_needed = self.min_interval_seconds - elapsed
-            self.total_pacing_seconds += sleep_needed
-            logger.info(
-                f"[RateLimiter] Call #{self.call_count} | Pacing request: sleeping {sleep_needed:.2f}s to enforce ≤ 13.3 RPM"
-            )
-            await asyncio.sleep(sleep_needed)
-        else:
-            logger.info(f"[RateLimiter] Call #{self.call_count} | Executing LLM request directly")
+        if self._lock is None:
+            self._lock = asyncio.Lock()
 
-        self.last_call_timestamp = time.time()
+        async with self._lock:
+            self.call_count += 1
+            now = time.time()
+            elapsed = now - self.last_call_timestamp
+            if self.last_call_timestamp > 0 and elapsed < self.min_interval_seconds:
+                sleep_needed = self.min_interval_seconds - elapsed
+                self.total_pacing_seconds += sleep_needed
+                logger.info(
+                    f"[RateLimiter] Call #{self.call_count} | Pacing request: sleeping {sleep_needed:.2f}s to enforce ≤ 13.3 RPM"
+                )
+                await asyncio.sleep(sleep_needed)
+            else:
+                logger.info(f"[RateLimiter] Call #{self.call_count} | Executing LLM request directly")
+
+            self.last_call_timestamp = time.time()
         return None
 
     async def on_model_error_callback(
@@ -63,21 +68,33 @@ class RateLimitPacerPlugin(BasePlugin):
                 f"[RateLimiter] Model error encountered: {error}. Backing off 15s and retrying..."
             )
             await asyncio.sleep(15.0)
-            agent = callback_context.invocation_context.agent
-            if hasattr(agent, "model"):
-                try:
-                    if ("ResourceExhausted" in err_msg or "429" in err_msg) and agent.model != settings.QUANTS_MODEL:
-                        logger.warning(
-                            f"[RateLimiter] Quota exhausted on {agent.model}. Falling back agent '{agent.name}' to {settings.QUANTS_MODEL}"
-                        )
-                        agent.model = settings.QUANTS_MODEL
+            invocation_context = getattr(callback_context, "_invocation_context", None)
+            agent = getattr(invocation_context, "agent", None) if invocation_context else None
 
-                    async for resp in agent.model.generate_content_async(llm_request):
-                        logger.info(f"[RateLimiter] Retry succeeded!")
-                        self.last_call_timestamp = time.time()
-                        return resp
-                except Exception as retry_err:
-                    logger.error(f"[RateLimiter] Retry failed: {retry_err}")
+            # Fallback to QUANTS_MODEL if 429 quota exhaustion hit on higher tier model
+            if ("ResourceExhausted" in err_msg or "429" in err_msg):
+                fallback_model = settings.QUANTS_MODEL
+                if getattr(llm_request, "model", None) != fallback_model:
+                    logger.warning(
+                        f"[RateLimiter] Quota exhausted on {getattr(llm_request, 'model', 'unknown')}. "
+                        f"Falling back agent '{getattr(agent, 'name', 'unknown')}' to {fallback_model}"
+                    )
+                    llm_request.model = fallback_model
+                    if agent and hasattr(agent, "model"):
+                        agent.model = fallback_model
+
+            try:
+                llm = getattr(agent, "canonical_model", None) if agent else None
+                if not llm:
+                    from google.adk.models.google_llm import Gemini
+                    llm = Gemini(model=llm_request.model)
+
+                async for resp in llm.generate_content_async(llm_request):
+                    logger.info("[RateLimiter] Fallback/Retry succeeded!")
+                    self.last_call_timestamp = time.time()
+                    return resp
+            except Exception as retry_err:
+                logger.error(f"[RateLimiter] Fallback/Retry failed: {retry_err}")
         return None
 
 

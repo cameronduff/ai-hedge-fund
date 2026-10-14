@@ -17,11 +17,26 @@ from loguru import logger
 load_dotenv(".env.local")
 load_dotenv(".env")
 
+# Initialize Langfuse Observability & OpenTelemetry Instrumentation
+langfuse_client = None
+try:
+    from openinference.instrumentation.google_adk import GoogleADKInstrumentor
+    GoogleADKInstrumentor().instrument()
+    from langfuse import get_client
+    langfuse_client = get_client()
+    if langfuse_client.auth_check():
+        logger.info("Langfuse tracing authenticated and active (https://cloud.langfuse.com)")
+    else:
+        logger.warning("Langfuse credentials check failed; tracing may be degraded.")
+except Exception as e:
+    logger.warning(f"Langfuse instrumentation could not be initialized: {e}")
+
 from app.core.config import settings
 from app.core.rate_limiter import RateLimitPacerPlugin
 from app.agents.investors.investors_orchestrator_agent.agent import (
     investors_orchestrator_agent,
 )
+
 from app.agents.management.portfolio_manager_agent.agent import portfolio_manager_agent
 from app.agents.quants.quants_orchestrator_agent.agent import (
     build_quants_orchestrator_agent,
@@ -66,7 +81,9 @@ def generate_executive_summary(
     md.append(f"# AI Hedge Fund — Weekly Run Report")
     md.append(f"**Timestamp:** `{run_timestamp}`  ")
     md.append(f"**Environment:** `{environment.upper()}` {'(DRY RUN - No Real Money)' if is_dry_run else '(LIVE EXECUTION)'}  ")
-    md.append(f"**Model:** `{settings.REASONING_MODEL}` with Thinking  ")
+    md.append(f"**Models:** Quants=`{settings.QUANTS_MODEL}` | Decisions=`{settings.DECISION_MODEL}` with Thinking  ")
+    md.append(f"**Observability:** Langfuse Tracing Active (`https://cloud.langfuse.com`)  ")
+
     if api_stats:
         calls = api_stats.get("call_count", 0)
         pacing = api_stats.get("pacing_seconds", 0.0)
@@ -121,7 +138,7 @@ def generate_executive_summary(
     return "\n".join(md)
 
 
-def run_hedge_fund(
+def _run_hedge_fund_internal(
     dry_run: bool = True,
     max_candidates: int | None = None,
     environment: str | None = None,
@@ -140,7 +157,10 @@ def run_hedge_fund(
 
     logger.info("=" * 60)
     logger.info(f"AI HEDGE FUND PRODUCTION RUN — {run_timestamp}")
-    logger.info(f"Environment: {env_str.upper()} | Dry-Run: {dry_run} | Model: {settings.REASONING_MODEL}")
+    logger.info(
+        f"Environment: {env_str.upper()} | Dry-Run: {dry_run} | "
+        f"Models: Quants={settings.QUANTS_MODEL}, Decisions={settings.DECISION_MODEL}"
+    )
     logger.info("=" * 60)
 
     # 1. Pre-flight Checks
@@ -196,12 +216,18 @@ def run_hedge_fund(
         plugins=plugins,
     )
     state_1 = run_stage(
-        app_name,
-        user_id,
-        runner_quants,
-        session_service,
-        session_id_1,
-        f"Run quant analysis on watchlist: {[t.model_dump() for t in stocks]}",
+        app_name=app_name,
+        user_id=user_id,
+        runner=runner_quants,
+        session_service=session_service,
+        session_id=session_id_1,
+        message=f"Run quant analysis on watchlist: {[t.model_dump() for t in stocks]}",
+        stage_name="quants-analysis",
+        metadata={
+            "stocks": [s.yfinance_ticker for s in stocks],
+            "num_candidates": len(stocks),
+            "dry_run": dry_run,
+        },
     )
 
     dossier_json = state_1.get("dossier", "{}")
@@ -252,12 +278,16 @@ def run_hedge_fund(
         plugins=plugins,
     )
     state_2 = run_stage(
-        app_name,
-        user_id,
-        runner_investors,
-        session_service,
-        session_id_2,
-        "Review the dossier and produce investment recommendations.",
+        app_name=app_name,
+        user_id=user_id,
+        runner=runner_investors,
+        session_service=session_service,
+        session_id=session_id_2,
+        message="Review the dossier and produce investment recommendations.",
+        stage_name="investor-boardroom",
+        metadata={
+            "dry_run": dry_run,
+        },
     )
 
     cio_output_raw = state_2.get("chief_investment_officer_output", {})
@@ -286,12 +316,16 @@ def run_hedge_fund(
         plugins=plugins,
     )
     state_3 = run_stage(
-        app_name,
-        user_id,
-        runner_portfolio,
-        session_service,
-        session_id_3,
-        "Review the CIO recommendations and manage the portfolio accordingly.",
+        app_name=app_name,
+        user_id=user_id,
+        runner=runner_portfolio,
+        session_service=session_service,
+        session_id=session_id_3,
+        message="Review the CIO recommendations and manage the portfolio accordingly.",
+        stage_name="portfolio-management",
+        metadata={
+            "dry_run": dry_run,
+        },
     )
 
     portfolio_output_raw = state_3.get("portfolio_manager_output", {})
@@ -422,6 +456,28 @@ def run_hedge_fund(
     logger.info(f"PIPELINE RUN COMPLETE — Report saved to {runs_dir / 'executive_summary.md'}")
     logger.info("=" * 60)
     print("\n" + summary_md)
+
+
+def run_hedge_fund(
+    dry_run: bool = True,
+    max_candidates: int | None = None,
+    environment: str | None = None,
+):
+    """Entrypoint with automatic Langfuse telemetry lifecycle flush."""
+    try:
+        _run_hedge_fund_internal(
+            dry_run=dry_run,
+            max_candidates=max_candidates,
+            environment=environment,
+        )
+    finally:
+        if langfuse_client:
+            logger.info("Flushing Langfuse telemetry...")
+            try:
+                langfuse_client.flush()
+                logger.info("Langfuse telemetry flushed successfully.")
+            except Exception as e:
+                logger.warning(f"Error flushing Langfuse telemetry: {e}")
 
 
 def main():
