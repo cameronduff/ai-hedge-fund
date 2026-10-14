@@ -64,10 +64,7 @@ class RateLimitPacerPlugin(BasePlugin):
     ) -> Optional[LlmResponse]:
         err_msg = str(error)
         if any(code in err_msg for code in ["503", "429", "UNAVAILABLE", "ResourceExhausted"]):
-            logger.warning(
-                f"[RateLimiter] Model error encountered: {error}. Backing off 15s and retrying..."
-            )
-            await asyncio.sleep(15.0)
+            backoff_delays = [15.0, 30.0, 60.0]
             invocation_context = getattr(callback_context, "_invocation_context", None)
             agent = getattr(invocation_context, "agent", None) if invocation_context else None
 
@@ -83,18 +80,26 @@ class RateLimitPacerPlugin(BasePlugin):
                     if agent and hasattr(agent, "model"):
                         agent.model = fallback_model
 
-            try:
-                llm = getattr(agent, "canonical_model", None) if agent else None
-                if not llm:
-                    from google.adk.models.google_llm import Gemini
-                    llm = Gemini(model=llm_request.model)
+            for attempt, delay in enumerate(backoff_delays, 1):
+                logger.warning(
+                    f"[RateLimiter] Model error (attempt {attempt}/{len(backoff_delays)}): {error}. "
+                    f"Backing off {delay}s before retry..."
+                )
+                await asyncio.sleep(delay)
 
-                async for resp in llm.generate_content_async(llm_request):
-                    logger.info("[RateLimiter] Fallback/Retry succeeded!")
-                    self.last_call_timestamp = time.time()
-                    return resp
-            except Exception as retry_err:
-                logger.error(f"[RateLimiter] Fallback/Retry failed: {retry_err}")
+                try:
+                    llm = getattr(agent, "canonical_model", None) if agent else None
+                    if not llm:
+                        from google.adk.models.google_llm import Gemini
+                        llm = Gemini(model=llm_request.model)
+
+                    async for resp in llm.generate_content_async(llm_request):
+                        logger.info(f"[RateLimiter] Retry succeeded on attempt {attempt}!")
+                        self.last_call_timestamp = time.time()
+                        return resp
+                except Exception as retry_err:
+                    logger.error(f"[RateLimiter] Retry attempt {attempt} failed: {retry_err}")
+                    err_msg = str(retry_err)
         return None
 
 
