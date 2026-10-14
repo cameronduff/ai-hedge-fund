@@ -25,16 +25,16 @@ StandardError=journal
 WantedBy=multi-user.target
 EOF"
 
-echo "Creating systemd timer: $TIMER_FILE (Every Monday at 09:00 UTC)..."
+echo "Creating systemd timer: $TIMER_FILE (Every Monday at 15:00 UK Time / Europe/London)..."
 
 sudo bash -c "cat << 'EOF' > $TIMER_FILE
 [Unit]
-Description=Run AI Hedge Fund Weekly Every Monday Morning
+Description=Run AI Hedge Fund Weekly (Monday 15:00 UK / Transatlantic Overlap)
 Requires=ai-hedge-fund.service
 
 [Timer]
-# Runs every Monday morning at 09:00 UTC (10:00 London / before US market open)
-OnCalendar=Mon *-*-* 09:00:00
+# Runs every Monday at 15:00 UK time (30 min after US market open with EU/UK overlap)
+OnCalendar=Mon *-*-* 15:00:00 Europe/London
 Persistent=true
 
 [Install]
