@@ -37,11 +37,16 @@ def build_fundamentals_agent(ticker_name: str):
         )
     )
 
+    target_instruction = (
+        f"TARGET TICKER: You must strictly analyze Yahoo Finance ticker '{ticker_name}'. Do NOT analyze any other tickers.\n\n"
+        + FUNDAMENTALS_PROMPT
+    )
+
     fundamentals_quant_agent = LlmAgent(
         name=f"fundamentals_raw_agent_{t}",
         model=settings.REASONING_MODEL,
         description="A rigorous accounting specialist that dissects balance sheets and income statements to verify financial health, debt levels, and operational efficiency.",
-        instruction=FUNDAMENTALS_PROMPT,
+        instruction=target_instruction,
         planner=planner,
         tools=[
             get_balance_sheet_by_ticker,

@@ -10,6 +10,8 @@ from google.adk.sessions import InMemorySessionService
 from google.genai import types
 from loguru import logger
 
+from app.core.rate_limiter import RateLimitPacerPlugin
+
 from app.agents.investors.investors_orchestrator_agent.agent import (
     investors_orchestrator_agent,
 )
@@ -58,7 +60,10 @@ runner_quants = Runner(
     agent=build_quants_orchestrator_agent(STOCKS),
     app_name=APP_NAME,
     session_service=session_service,
-    plugins=[ReflectAndRetryToolPlugin(max_retries=3)],
+    plugins=[
+        RateLimitPacerPlugin(),
+        ReflectAndRetryToolPlugin(max_retries=3),
+    ],
 )
 
 state_1 = run_stage(
@@ -92,7 +97,10 @@ runner_investors = Runner(
     agent=investors_orchestrator_agent,
     app_name=APP_NAME,
     session_service=session_service,
-    plugins=[ReflectAndRetryToolPlugin(max_retries=3)],
+    plugins=[
+        RateLimitPacerPlugin(),
+        ReflectAndRetryToolPlugin(max_retries=3),
+    ],
 )
 
 state_2 = run_stage(
@@ -126,7 +134,10 @@ runner_portfolio = Runner(
     agent=portfolio_manager_agent,
     app_name=APP_NAME,
     session_service=session_service,
-    plugins=[ReflectAndRetryToolPlugin(max_retries=3)],
+    plugins=[
+        RateLimitPacerPlugin(),
+        ReflectAndRetryToolPlugin(max_retries=3),
+    ],
 )
 
 state_3 = run_stage(

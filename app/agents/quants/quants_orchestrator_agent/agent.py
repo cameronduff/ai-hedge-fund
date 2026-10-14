@@ -14,15 +14,16 @@ from loguru import logger
 from app.utils.ticker_utils import load_watchlist
 
 def build_ticker_pipeline(ticker: Ticker) -> SequentialAgent:
-    t = ticker.yfinance_ticker.replace(".","_")
+    yf_symbol = ticker.yfinance_ticker
+    t = yf_symbol.replace(".", "_")
 
-    quants_team = ParallelAgent(
+    quants_team = SequentialAgent(
         name=f"quants_{t}",
         sub_agents=[
-            build_fundamentals_agent(t),
-            build_technicals_agent(t),
-            build_growth_agent(t),
-            build_valuations_agent(t),
+            build_fundamentals_agent(yf_symbol),
+            build_technicals_agent(yf_symbol),
+            build_growth_agent(yf_symbol),
+            build_valuations_agent(yf_symbol),
         ]
     )
 

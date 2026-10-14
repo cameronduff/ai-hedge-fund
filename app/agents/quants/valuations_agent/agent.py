@@ -37,11 +37,16 @@ def build_valuations_agent(ticker_name: str):
         ),
     )
 
+    target_instruction = (
+        f"TARGET TICKER: You must strictly analyze Yahoo Finance ticker '{ticker_name}'. Do NOT analyze any other tickers.\n\n"
+        + VALUATIONS_PROMPT
+    )
+
     valuations_quant_agent = LlmAgent(
         name=f"valuations_raw_agent_{t}",
         model=settings.REASONING_MODEL,
         description="A mathematical appraiser that calculates intrinsic value and relative pricing multiples like P/E, P/B, and PEG to determine if a stock is trading at a discount.",
-        instruction=VALUATIONS_PROMPT,
+        instruction=target_instruction,
         planner=planner,
         tools=[
             get_info_by_ticker,

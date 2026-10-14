@@ -503,82 +503,155 @@ class WatchlistService:
             "failed_checks": failed_checks,
         }
 
+    def score_ticker(self, yfinance_ticker: str) -> tuple[float, dict]:
+        """
+        Calculates a multi-factor score (0-100) combining valuation, momentum,
+        analyst consensus, and balance sheet safety.
+
+        Returns:
+            tuple[float, dict]: The composite score and the underlying metrics dictionary.
+        """
+        eval_result = self.evaluate_ticker(yfinance_ticker)
+        metrics = eval_result["metrics"]
+        score = 50.0  # neutral starting point
+
+        rsi = metrics.get("rsi")
+        if rsi is not None:
+            if 40 <= rsi <= 60:
+                score += 15
+            elif 30 <= rsi <= 70:
+                score += 5
+            elif rsi > 75 or rsi < 25:
+                score -= 15
+
+        pe = metrics.get("pe_ratio")
+        if pe is not None:
+            if 0 < pe <= 20:
+                score += 15
+            elif 20 < pe <= 35:
+                score += 5
+            elif pe > 50 or pe <= 0:
+                score -= 15
+
+        de = metrics.get("debt_equity")
+        if de is not None:
+            if 0 <= de <= 1.0:
+                score += 10
+            elif de > 2.5:
+                score -= 10
+
+        upside = metrics.get("analyst_upside")
+        if upside is not None:
+            if upside >= 20.0:
+                score += 15
+            elif upside >= 10.0:
+                score += 8
+            elif upside < 0:
+                score -= 10
+
+        rev_growth = metrics.get("revenue_growth")
+        if rev_growth is not None:
+            if rev_growth >= 15.0:
+                score += 10
+            elif rev_growth >= 5.0:
+                score += 5
+            elif rev_growth < 0:
+                score -= 5
+
+        earnings_days = metrics.get("earnings_days")
+        if earnings_days is not None and 0 <= earnings_days <= 14:
+            score -= 10
+
+        final_score = max(0.0, min(100.0, score))
+        return final_score, metrics
+
     def filter_watchlist(
         self,
         candidates: list[Ticker] | None = None,
         max_tickers: int | None = None,
         include_traded_instruments: bool = True,
+        min_score: float = 40.0,
         **filter_kwargs,
     ) -> list[Ticker]:
         """
-        Filters candidate tickers down based on quantitative and fundamental screening criteria before passing to quants.
+        Filters and ranks candidate tickers down based on multi-factor quantitative
+        and fundamental screening criteria before passing to quants.
+
+        Guarantees that currently held or pending Trading 212 instruments are always included.
 
         Args:
             candidates (list[Ticker] | None): Optional list of candidate Tickers. Defaults to watchlist CSV.
             max_tickers (int | None): Maximum number of filtered tickers to return.
             include_traded_instruments (bool): Whether to include currently open positions / pending orders from Trading212.
+            min_score (float): Minimum composite score required for non-held candidate stocks.
             **filter_kwargs: Threshold overrides for screening criteria.
 
         Returns:
-            list[Ticker]: Filtered list of Ticker objects ready for quant analysis.
+            list[Ticker]: Filtered, ranked list of Ticker objects ready for quant analysis.
         """
-        if candidates is None:
-            active_df = self.watchlist[self.watchlist["active"] == True]
-            df_to_use = active_df if not active_df.empty else self.watchlist
+        from app.core.config import settings
 
-            candidates = [
-                Ticker(
-                    name=str(row["name"]),
-                    trading212_ticker=str(row["trading212_ticker"]),
-                    yfinance_ticker=str(row["yfinance_ticker"]),
-                )
-                for _, row in df_to_use.iterrows()
-            ]
+        if max_tickers is None:
+            max_tickers = settings.MAX_CANDIDATES
+
+        if candidates is None:
+            from app.utils.ticker_utils import load_watchlist
+            candidates = load_watchlist(self.tickers_path)
 
         traded_tickers: set[str] = set()
         if include_traded_instruments:
             traded_tickers = self.get_existing_traded_instruments()
             logger.info(
-                f"Retrieved {len(traded_tickers)} currently traded/pending instruments from Trading212"
+                f"Retrieved {len(traded_tickers)} currently traded/pending instruments from Trading212: {traded_tickers}"
             )
 
-        filtered_stocks: list[Ticker] = []
-        seen_tickers: set[str] = set()
+        # 1. First include any actively held or pending orders
+        selected_stocks: list[Ticker] = []
+        seen_t212: set[str] = set()
 
         for ticker in candidates:
-            if max_tickers and len(filtered_stocks) >= max_tickers:
-                break
-
-            if ticker.trading212_ticker in seen_tickers:
-                continue
-
-            # Prioritize/include actively held or pending orders
             if ticker.trading212_ticker in traded_tickers:
-                logger.info(
-                    f"Including existing traded instrument: {ticker.trading212_ticker}"
-                )
-                filtered_stocks.append(ticker)
-                seen_tickers.add(ticker.trading212_ticker)
-                continue
+                logger.info(f"Retaining existing traded instrument: {ticker.trading212_ticker} ({ticker.name})")
+                selected_stocks.append(ticker)
+                seen_t212.add(ticker.trading212_ticker)
 
-            eval_result = self.evaluate_ticker(ticker.yfinance_ticker, **filter_kwargs)
-            if eval_result["passed"]:
-                logger.info(
-                    f"Ticker {ticker.yfinance_ticker} passed screening: "
-                    f"{', '.join(eval_result['passed_checks'])}"
-                )
-                filtered_stocks.append(ticker)
-                seen_tickers.add(ticker.trading212_ticker)
-            else:
-                logger.debug(
-                    f"Ticker {ticker.yfinance_ticker} filtered out: "
-                    f"{', '.join(eval_result['failed_checks'])}"
-                )
+        # Also add traded instruments that might not have been in candidates CSV
+        if include_traded_instruments:
+            from app.utils.ticker_utils import map_trading212_to_yfinance
+            for t_sym in traded_tickers:
+                if t_sym not in seen_t212:
+                    yf_sym = map_trading212_to_yfinance(t_sym)
+                    logger.info(f"Adding held instrument missing from candidates: {t_sym} -> {yf_sym}")
+                    selected_stocks.append(Ticker(name=t_sym, trading212_ticker=t_sym, yfinance_ticker=yf_sym))
+                    seen_t212.add(t_sym)
+
+        # 2. Score remaining candidate stocks to fill remaining slots up to max_tickers
+        remaining_slots = max(0, max_tickers - len(selected_stocks))
+        if remaining_slots > 0:
+            scored_candidates: list[tuple[float, Ticker]] = []
+            for ticker in candidates:
+                if ticker.trading212_ticker in seen_t212:
+                    continue
+                try:
+                    score, metrics = self.score_ticker(ticker.yfinance_ticker)
+                    logger.debug(f"Candidate {ticker.yfinance_ticker} score: {score:.1f}")
+                    if score >= min_score:
+                        scored_candidates.append((score, ticker))
+                except Exception as e:
+                    logger.warning(f"Error scoring {ticker.yfinance_ticker}: {e}")
+
+            # Sort descending by composite score
+            scored_candidates.sort(key=lambda x: x[0], reverse=True)
+
+            for score, ticker in scored_candidates[:remaining_slots]:
+                logger.info(f"Selected candidate by score {score:.1f}: {ticker.name} ({ticker.yfinance_ticker})")
+                selected_stocks.append(ticker)
+                seen_t212.add(ticker.trading212_ticker)
 
         logger.info(
-            f"Screening complete: {len(filtered_stocks)} tickers selected for Quants"
+            f"Screening complete: {len(selected_stocks)} tickers selected for Quants ({len(traded_tickers)} held/pending + {len(selected_stocks) - len(traded_tickers)} candidates)"
         )
-        return filtered_stocks
+        return selected_stocks
 
     def get_filtered_watchlist(self, **kwargs) -> list[Ticker]:
         """
@@ -589,13 +662,6 @@ class WatchlistService:
 
 if __name__ == "__main__":
     service = WatchlistService()
-    results = service.filter_watchlist(
-        candidates=[
-            Ticker(name="Apple", trading212_ticker="AAPL_US_EQ", yfinance_ticker="AAPL"),
-            Ticker(name="Alphabet", trading212_ticker="GOOGL_US_EQ", yfinance_ticker="GOOGL"),
-            Ticker(name="NVIDIA", trading212_ticker="NVDA_US_EQ", yfinance_ticker="NVDA"),
-            Ticker(name="Microsoft", trading212_ticker="MSFT_US_EQ", yfinance_ticker="MSFT"),
-        ]
-    )
+    results = service.filter_watchlist(max_tickers=4)
     for stock in results:
         print(f"Selected: {stock.name} ({stock.yfinance_ticker})")

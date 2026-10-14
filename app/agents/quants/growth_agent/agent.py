@@ -37,11 +37,16 @@ def build_growth_agent(ticker_name: str):
         ),
     )
 
+    target_instruction = (
+        f"TARGET TICKER: You must strictly analyze Yahoo Finance ticker '{ticker_name}'. Do NOT analyze any other tickers.\n\n"
+        + GROWTH_PROMPT
+    )
+
     growth_quant_agent = LlmAgent(
         name=f"growth_raw_agent_{t}",
         model=settings.REASONING_MODEL,
         description="A forward-looking strategist that analyzes revenue expansion, Total Addressable Market (TAM), and analyst price targets to project future earnings trajectory.",
-        instruction=GROWTH_PROMPT,
+        instruction=target_instruction,
         planner=planner,
         tools=[
             get_analyst_price_targets,

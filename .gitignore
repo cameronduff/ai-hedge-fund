@@ -9,3 +9,6 @@ ai_hedge_fund.json
 outputs/dossier.json
 outputs/cio_output.json
 app/tickers.csv
+runs/
+logs/
+.pytest_cache/

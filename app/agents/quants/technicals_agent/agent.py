@@ -33,11 +33,16 @@ def build_technicals_agent(ticker_name: str):
         ),
     )
 
+    target_instruction = (
+        f"TARGET TICKER: You must strictly analyze Yahoo Finance ticker '{ticker_name}'. Do NOT analyze any other tickers.\n\n"
+        + TECHNICALS_PROMPT
+    )
+
     technicals_quant_agent = LlmAgent(
         name=f"technicals_raw_agent_{t}",
         model=settings.REASONING_MODEL,
         description="A pattern-recognition expert focused on price action, momentum indicators, and volume trends to identify market entry and exit signals.",
-        instruction=TECHNICALS_PROMPT,
+        instruction=target_instruction,
         planner=planner,
         tools=[get_historical_data, get_options_chain],
         generate_content_config=generate_content_config,
