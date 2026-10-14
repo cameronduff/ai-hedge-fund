@@ -4,13 +4,20 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    # Models
+    # Hybrid Model Architecture
+    QUANTS_MODEL: str = Field(
+        alias="QUANTS_MODEL", default="gemini-3.5-flash-lite"
+    )
+    DECISION_MODEL: str = Field(
+        alias="DECISION_MODEL", default="gemini-3.8-flash"
+    )
     REASONING_MODEL: str = Field(
-        alias="REASONING_MODEL", default="gemini-3.8-flash"
+        alias="REASONING_MODEL", default="gemini-3.5-flash-lite"
     )
     FORMATTING_MODEL: str = Field(
-        alias="FORMATTING_MODEL", default="gemini-3.8-flash"
+        alias="FORMATTING_MODEL", default="gemini-3.5-flash-lite"
     )
+
     LOW_THINKING_BUDGET: int = Field(default=1024, alias="LOW_THINKING_BUDGET")
     MEDIUM_THINKING_BUDGET: int = Field(default=2048, alias="MEDIUM_THINKING_BUDGET")
     HIGH_THINKING_BUDGET: int = Field(default=4096, alias="HIGH_THINKING_BUDGET")

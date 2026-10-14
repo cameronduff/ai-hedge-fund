@@ -50,3 +50,48 @@ def test_trading212_dry_run_safety():
     res = client.place_market_order(payload)
     assert res.get("status") == "DRY_RUN"
     assert res.get("simulated") is True
+
+
+def test_single_step_agents_and_hybrid_models():
+    from google.adk.agents import LlmAgent
+    from app.core.config import settings
+    from app.agents.quants.fundamentals_agent.agent import build_fundamentals_agent
+    from app.agents.quants.technicals_agent.agent import build_technicals_agent
+    from app.agents.quants.growth_agent.agent import build_growth_agent
+    from app.agents.quants.valuations_agent.agent import build_valuations_agent
+    from app.agents.investors.chief_investment_officer.agent import chief_investment_officer_agent
+    from app.agents.management.portfolio_manager_agent.agent import portfolio_manager_agent
+    from app.models.quants_models import FundamentalsAgentOutput, TechnicalAgentOutput, GrowthAgentOutput, ValuationAgentOutput
+    from app.models.investors_models import CIOOutput
+    from app.models.management_models import PortfolioManagerOutput
+
+    # 1. Quants are single-step LlmAgents with output_schema
+    fa = build_fundamentals_agent("AAPL")
+    assert isinstance(fa, LlmAgent)
+    assert fa.output_schema == FundamentalsAgentOutput
+    assert fa.model == settings.QUANTS_MODEL
+
+    ta = build_technicals_agent("AAPL")
+    assert isinstance(ta, LlmAgent)
+    assert ta.output_schema == TechnicalAgentOutput
+    assert ta.model == settings.QUANTS_MODEL
+
+    ga = build_growth_agent("AAPL")
+    assert isinstance(ga, LlmAgent)
+    assert ga.output_schema == GrowthAgentOutput
+    assert ga.model == settings.QUANTS_MODEL
+
+    va = build_valuations_agent("AAPL")
+    assert isinstance(va, LlmAgent)
+    assert va.output_schema == ValuationAgentOutput
+    assert va.model == settings.QUANTS_MODEL
+
+    # 2. CIO and PM are single-step LlmAgents with output_schema and DECISION_MODEL
+    assert isinstance(chief_investment_officer_agent, LlmAgent)
+    assert chief_investment_officer_agent.output_schema == CIOOutput
+    assert chief_investment_officer_agent.model == settings.DECISION_MODEL
+
+    assert isinstance(portfolio_manager_agent, LlmAgent)
+    assert portfolio_manager_agent.output_schema == PortfolioManagerOutput
+    assert portfolio_manager_agent.model == settings.DECISION_MODEL
+

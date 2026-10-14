@@ -60,17 +60,24 @@ class RateLimitPacerPlugin(BasePlugin):
         err_msg = str(error)
         if any(code in err_msg for code in ["503", "429", "UNAVAILABLE", "ResourceExhausted"]):
             logger.warning(
-                f"[RateLimiter] Transient model error encountered: {error}. Backing off 15s and retrying..."
+                f"[RateLimiter] Model error encountered: {error}. Backing off 15s and retrying..."
             )
             await asyncio.sleep(15.0)
             agent = callback_context.invocation_context.agent
             if hasattr(agent, "model"):
                 try:
+                    if ("ResourceExhausted" in err_msg or "429" in err_msg) and agent.model != settings.QUANTS_MODEL:
+                        logger.warning(
+                            f"[RateLimiter] Quota exhausted on {agent.model}. Falling back agent '{agent.name}' to {settings.QUANTS_MODEL}"
+                        )
+                        agent.model = settings.QUANTS_MODEL
+
                     async for resp in agent.model.generate_content_async(llm_request):
-                        logger.info(f"[RateLimiter] Retry succeeded after transient error!")
+                        logger.info(f"[RateLimiter] Retry succeeded!")
                         self.last_call_timestamp = time.time()
                         return resp
                 except Exception as retry_err:
-                    logger.error(f"[RateLimiter] Retry after transient error failed: {retry_err}")
+                    logger.error(f"[RateLimiter] Retry failed: {retry_err}")
         return None
+
 

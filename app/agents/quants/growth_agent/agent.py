@@ -1,13 +1,9 @@
-from google.adk.agents import LlmAgent, SequentialAgent
+from google.adk.agents import LlmAgent
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
 from app.core.config import settings
-from app.agents.quants.growth_agent.prompt import (
-    GROWTH_PROMPT,
-    GROWTH_FORMATTING_PROMPT,
-)
-
+from app.agents.quants.growth_agent.prompt import GROWTH_PROMPT
 from app.models.quants_models import Ticker, GrowthAgentOutput
 from app.tools.yfinance_tools import (
     get_analyst_price_targets,
@@ -16,7 +12,7 @@ from app.tools.yfinance_tools import (
 )
 
 
-def build_growth_agent(ticker_name: str):
+def build_growth_agent(ticker_name: str) -> LlmAgent:
     t = ticker_name.replace(".", "_")
     planner = BuiltInPlanner(
         thinking_config=types.ThinkingConfig(
@@ -42,9 +38,9 @@ def build_growth_agent(ticker_name: str):
         + GROWTH_PROMPT
     )
 
-    growth_quant_agent = LlmAgent(
-        name=f"growth_raw_agent_{t}",
-        model=settings.REASONING_MODEL,
+    growth_agent = LlmAgent(
+        name=f"growth_agent_{t}",
+        model=settings.QUANTS_MODEL,
         description="A forward-looking strategist that analyzes revenue expansion, Total Addressable Market (TAM), and analyst price targets to project future earnings trajectory.",
         instruction=target_instruction,
         planner=planner,
@@ -55,24 +51,9 @@ def build_growth_agent(ticker_name: str):
         ],
         generate_content_config=generate_content_config,
         input_schema=Ticker,
-        output_key=f"temp:growth_agent_raw_output_{t}",
-    )
-
-    growth_formatter_agent = LlmAgent(
-        name=f"growth_formatter_agent_{t}",
-        model=settings.FORMATTING_MODEL,
-        instruction=GROWTH_FORMATTING_PROMPT,
-        generate_content_config=generate_content_config,
         output_schema=GrowthAgentOutput,
         output_key=f"growth_agent_output_{t}",
     )
 
-    growth_agent = SequentialAgent(
-        name=f"growth_agent_{t}",
-        sub_agents=[
-            growth_quant_agent,
-            growth_formatter_agent,
-        ],
-    )
-
     return growth_agent
+

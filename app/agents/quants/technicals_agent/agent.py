@@ -1,18 +1,14 @@
-from google.adk.agents import LlmAgent, SequentialAgent
+from google.adk.agents import LlmAgent
 from google.adk.planners import BuiltInPlanner
 from google.genai import types
 
 from app.core.config import settings
-from app.agents.quants.technicals_agent.prompt import (
-    TECHNICALS_PROMPT,
-    TECHNICALS_FORMATTING_PROMPT,
-)
-
+from app.agents.quants.technicals_agent.prompt import TECHNICALS_PROMPT
 from app.models.quants_models import Ticker, TechnicalAgentOutput
 from app.tools.yfinance_tools import get_historical_data, get_options_chain
 
 
-def build_technicals_agent(ticker_name: str):
+def build_technicals_agent(ticker_name: str) -> LlmAgent:
     t = ticker_name.replace(".", "_")
     planner = BuiltInPlanner(
         thinking_config=types.ThinkingConfig(
@@ -38,33 +34,18 @@ def build_technicals_agent(ticker_name: str):
         + TECHNICALS_PROMPT
     )
 
-    technicals_quant_agent = LlmAgent(
-        name=f"technicals_raw_agent_{t}",
-        model=settings.REASONING_MODEL,
+    technicals_agent = LlmAgent(
+        name=f"technicals_agent_{t}",
+        model=settings.QUANTS_MODEL,
         description="A pattern-recognition expert focused on price action, momentum indicators, and volume trends to identify market entry and exit signals.",
         instruction=target_instruction,
         planner=planner,
         tools=[get_historical_data, get_options_chain],
         generate_content_config=generate_content_config,
         input_schema=Ticker,
-        output_key=f"temp:technicals_agent_raw_output_{t}",
-    )
-
-    technicals_formatter_agent = LlmAgent(
-        name=f"technicals_formatter_agent_{t}",
-        model=settings.FORMATTING_MODEL,
-        instruction=TECHNICALS_FORMATTING_PROMPT,
-        generate_content_config=generate_content_config,
         output_schema=TechnicalAgentOutput,
         output_key=f"technicals_agent_output_{t}",
     )
 
-    technicals_agent = SequentialAgent(
-        name=f"technicals_agent_{t}",
-        sub_agents=[
-            technicals_quant_agent,
-            technicals_formatter_agent,
-        ],
-    )
-
     return technicals_agent
+

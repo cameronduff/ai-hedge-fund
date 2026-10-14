@@ -18,9 +18,9 @@ from app.tools.calculation_tools import (
 )
 from app.models.management_models import PortfolioManagerOutput
 
-portfolio_manager = LlmAgent(
-    name="portfolio_manager",
-    model=settings.REASONING_MODEL,
+portfolio_manager_agent = LlmAgent(
+    name="portfolio_manager_agent",
+    model=settings.DECISION_MODEL,
     instruction=PORTFOLIO_MANAGER_PROMPT,
     planner=BuiltInPlanner(
         thinking_config=types.ThinkingConfig(
@@ -49,35 +49,10 @@ portfolio_manager = LlmAgent(
         AgentTool(agent=risk_manager_agent),
     ],
     sub_agents=[risk_manager_agent],
-    output_key="portfolio_manager_raw_output"
-)
-
-porfolio_manager_formatter_agent = LlmAgent(
-    name="porfolio_manager_formatter_agent",
-    model=settings.FORMATTING_MODEL,
-    instruction=PORTFOLIO_MANAGER_FORMATTER_PROMPT,
     output_schema=PortfolioManagerOutput,
     output_key="portfolio_manager_output",
-    generate_content_config=types.GenerateContentConfig(
-        temperature=0.2,
-        http_options=types.HttpOptions(
-            retry_options=types.HttpRetryOptions(
-                attempts=5,
-                initial_delay=10.0,
-                max_delay=360.0,
-                exp_base=2.0,
-            )
-        ),
-    ),
 )
 
-portfolio_manager_agent = SequentialAgent(
-    name="portfolio_manager_agent",
-    sub_agents=[
-        portfolio_manager,
-        porfolio_manager_formatter_agent
-    ]
-)
 
 
 if __name__ == "__main__":

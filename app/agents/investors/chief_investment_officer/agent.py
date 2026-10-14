@@ -26,9 +26,9 @@ from app.agents.investors.stanley_druckenmiller_agent.agent import build_stanley
 from app.agents.investors.warren_buffett_agent.agent import build_warren_buffett_debate_agent
 
 
-chief_investment_officer_debater = LlmAgent(
-    name="chief_investment_officer_debater",
-    model=settings.REASONING_MODEL,
+chief_investment_officer_agent = LlmAgent(
+    name="chief_investment_officer_agent",
+    model=settings.DECISION_MODEL,
     instruction=CHIEF_INVESTMENT_OFFICER_PROMPT,
     planner=BuiltInPlanner(
         thinking_config=types.ThinkingConfig(
@@ -51,7 +51,8 @@ chief_investment_officer_debater = LlmAgent(
         AgentTool(agent=build_stanley_druckenmiller_debate_agent()),
         AgentTool(agent=build_warren_buffett_debate_agent()),
     ],
-    output_key="chief_investment_officer_debate_output",
+    output_schema=CIOOutput,
+    output_key="chief_investment_officer_output",
     generate_content_config=types.GenerateContentConfig(
         temperature=0.0,
         http_options=types.HttpOptions(
@@ -65,29 +66,3 @@ chief_investment_officer_debater = LlmAgent(
     ),
 )
 
-chief_investment_officer_formatter = LlmAgent(
-    name="chief_investment_officer_formatter",
-    model=settings.FORMATTING_MODEL,
-    instruction=CHIEF_INVESTMENT_OFFICER_FORMATTING_PROMPT,
-    output_schema=CIOOutput,
-    output_key="chief_investment_officer_output",
-    generate_content_config=types.GenerateContentConfig(
-        temperature=0.2,
-        http_options=types.HttpOptions(
-            retry_options=types.HttpRetryOptions(
-                attempts=5,
-                initial_delay=10.0,
-                max_delay=360.0,
-                exp_base=2.0,
-            )
-        ),
-    ),
-)
-
-chief_investment_officer_agent = SequentialAgent(
-    name="chief_investment_officer_agent",
-    sub_agents=[
-        chief_investment_officer_debater,
-        chief_investment_officer_formatter,
-    ],
-)
