@@ -16,6 +16,7 @@ Wants=network-online.target
 Type=oneshot
 User=cd_server
 WorkingDirectory=/home/cd_server/repositories/ai-hedge-fund
+Environment="PATH=/home/cd_server/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 EnvironmentFile=/home/cd_server/repositories/ai-hedge-fund/.env.local
 ExecStart=/home/cd_server/repositories/ai-hedge-fund/scripts/run_weekly.sh --live
 StandardOutput=journal

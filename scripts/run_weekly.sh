@@ -1,9 +1,19 @@
 #!/bin/bash
 set -euo pipefail
 
+# Ensure standard user binary paths (e.g. uv) are present in PATH for non-interactive shells and systemd
+export PATH="/home/cd_server/.local/bin:$HOME/.local/bin:$PATH"
+
 # Directory of this repository
 REPO_DIR="/home/cd_server/repositories/ai-hedge-fund"
 cd "$REPO_DIR"
+
+# Source environment variables if present
+if [ -f "$REPO_DIR/.env.local" ]; then
+    set -a
+    source "$REPO_DIR/.env.local"
+    set +a
+fi
 
 # Logs directory
 LOGS_DIR="$REPO_DIR/logs"
