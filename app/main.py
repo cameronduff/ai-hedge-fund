@@ -249,12 +249,9 @@ if portfolio_output.instructions:
         
         try:
             if instruction.order_type == "MARKET":
-                # MarketOrderPayload in this project requires a limitPrice > 0
                 payload = MarketOrderPayload(
-                    limitPrice=limit_price or 0.01, 
                     quantity=quantity,
                     ticker=instruction.trading212_ticker,
-                    timeValidity=instruction.time_validity
                 )
                 result = trading212_client.place_market_order(payload)
             elif instruction.order_type == "LIMIT":

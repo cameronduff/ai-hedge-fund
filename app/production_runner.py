@@ -398,10 +398,8 @@ def _run_hedge_fund_internal(
             try:
                 if instruction.order_type == "MARKET":
                     payload = MarketOrderPayload(
-                        limitPrice=limit_price or 0.01,
                         quantity=quantity,
                         ticker=instruction.trading212_ticker,
-                        timeValidity=instruction.time_validity,
                     )
                     res = t212_client.place_market_order(payload)
                 elif instruction.order_type == "LIMIT":

@@ -42,10 +42,8 @@ def test_watchlist_filter_caps():
 def test_trading212_dry_run_safety():
     client = Trading212Client(dry_run=True)
     payload = MarketOrderPayload(
-        limitPrice=100.0,
         quantity=1.0,
         ticker="AAPL_US_EQ",
-        timeValidity="DAY",
     )
     res = client.place_market_order(payload)
     assert res.get("status") == "DRY_RUN"

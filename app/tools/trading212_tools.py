@@ -3,6 +3,7 @@ from app.clients.trading212_client import Trading212Client
 from app.models.trading212_models import (
     LimitOrderPayload,
     MarketOrderPayload,
+    StopOrderPayload,
     StopLimitOrderPayload,
 )
 
@@ -119,7 +120,7 @@ def place_market_order(payload: MarketOrderPayload) -> dict:
     return trading212_client.place_market_order(payload)
 
 
-def place_stop_order(payload: MarketOrderPayload) -> dict:
+def place_stop_order(payload: StopOrderPayload) -> dict:
     """
     Places a stop order on Trading 212.
 

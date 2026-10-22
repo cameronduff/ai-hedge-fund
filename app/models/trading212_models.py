@@ -11,8 +11,13 @@ class LimitOrderPayload(BaseModel):
 
 
 class MarketOrderPayload(BaseModel):
-    limitPrice: float = Field(..., gt=0)
     quantity: float = Field(...)
+    ticker: str = Field(...)
+
+
+class StopOrderPayload(BaseModel):
+    quantity: float = Field(...)
+    stopPrice: float = Field(..., gt=0)
     ticker: str = Field(...)
     timeValidity: Literal["DAY", "GOOD_TILL_CANCEL"]
 

@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.models.trading212_models import (
     LimitOrderPayload,
     MarketOrderPayload,
+    StopOrderPayload,
     StopLimitOrderPayload,
 )
 
@@ -152,7 +153,7 @@ class Trading212Client:
         except Exception as err:
             logger.error(f"An unrelated error occurred: {err}")
 
-    def place_stop_order(self, payload: MarketOrderPayload):
+    def place_stop_order(self, payload: StopOrderPayload):
         if self._is_live_order_blocked():
             logger.warning(f"[DRY RUN] Skipping live stop order: {payload.model_dump()}")
             return {"status": "DRY_RUN", "simulated": True, "payload": payload.model_dump()}
@@ -221,9 +222,11 @@ class Trading212Client:
             auth = (self.username, self.password)
 
             response = requests.delete(url, headers=headers, auth=auth)
+            response.raise_for_status()
 
-            data = response.json()
-            return data
+            if response.content:
+                return response.json()
+            return {"status": "CANCELLED", "id": id}
         except HTTPError as http_error:
             if response.status_code == 429:
                 reset_timestamp = response.headers.get("x-ratelimit-reset")
