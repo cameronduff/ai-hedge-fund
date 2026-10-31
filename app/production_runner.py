@@ -240,6 +240,7 @@ def _run_hedge_fund_internal(
             "num_candidates": len(stocks),
             "dry_run": dry_run,
         },
+        stage_timeout_seconds=max(4500.0, len(stocks) * 900.0),
     )
 
     dossier_json = state_1.get("dossier", "{}")
@@ -300,6 +301,7 @@ def _run_hedge_fund_internal(
         metadata={
             "dry_run": dry_run,
         },
+        stage_timeout_seconds=2400.0,
     )
 
     cio_output_raw = state_2.get("chief_investment_officer_output", {})
@@ -338,6 +340,7 @@ def _run_hedge_fund_internal(
         metadata={
             "dry_run": dry_run,
         },
+        stage_timeout_seconds=2400.0,
     )
 
     portfolio_output_raw = state_3.get("portfolio_manager_output", {})

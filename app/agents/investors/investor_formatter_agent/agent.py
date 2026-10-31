@@ -17,12 +17,13 @@ def build_investor_formatter_agent(investor_name: str):
         generate_content_config=types.GenerateContentConfig(
             temperature=0.2,
             http_options=types.HttpOptions(
+            timeout=180000,
                 retry_options=types.HttpRetryOptions(
-                    attempts=5,
-                    initial_delay=10.0,
-                    max_delay=360.0,
-                    exp_base=2.0,
-                )
+                attempts=3,
+                initial_delay=5.0,
+                max_delay=30.0,
+                exp_base=2.0,
+            )
             ),
         ),
     )

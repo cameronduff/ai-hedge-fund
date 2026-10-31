@@ -26,10 +26,17 @@ echo "==========================================================" | tee -a "$LOG
 echo "AI Hedge Fund Weekly Run — Started at $(date)" | tee -a "$LOG_FILE"
 echo "==========================================================" | tee -a "$LOG_FILE"
 
-# Run production runner (defaults to --live unless --dry-run passed)
+# Run production runner with a hard 120-minute ceiling (defaults to --live unless --dry-run passed)
 MODE_FLAG="${1:---live}"
 
-PYTHONUNBUFFERED=1 uv run python -m app.production_runner "$MODE_FLAG" 2>&1 | tee -a "$LOG_FILE"
+timeout --preserve-status 7200s env PYTHONUNBUFFERED=1 uv run python -m app.production_runner "$MODE_FLAG" 2>&1 | tee -a "$LOG_FILE"
+RUN_EXIT_CODE="${PIPESTATUS[0]}"
+
+if [ "$RUN_EXIT_CODE" -eq 143 ] || [ "$RUN_EXIT_CODE" -eq 124 ]; then
+    echo "[ERROR] Weekly run was terminated by timeout (exceeded 7200s / 120m)!" | tee -a "$LOG_FILE"
+elif [ "$RUN_EXIT_CODE" -ne 0 ]; then
+    echo "[ERROR] Weekly run exited with non-zero status code: $RUN_EXIT_CODE" | tee -a "$LOG_FILE"
+fi
 
 
 

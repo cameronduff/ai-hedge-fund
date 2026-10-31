@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     LIVE_TRADING_ENABLED: bool = Field(default=False, alias="LIVE_TRADING_ENABLED")
 
     # Pipeline Rate Limiting & Sizing
-    MAX_CANDIDATES: int = Field(default=5, alias="MAX_CANDIDATES")
+    MAX_CANDIDATES: int = Field(default=4, alias="MAX_CANDIDATES")
     RATE_LIMIT_DELAY_SECONDS: float = Field(default=4.5, alias="RATE_LIMIT_DELAY_SECONDS")
     MAX_POSITION_SIZE_PCT: float = Field(default=15.0, alias="MAX_POSITION_SIZE_PCT")
     MIN_CASH_RESERVE_PCT: float = Field(default=10.0, alias="MIN_CASH_RESERVE_PCT")

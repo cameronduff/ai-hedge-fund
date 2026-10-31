@@ -20,6 +20,7 @@ async def _run_stage_async(
     message: str,
     stage_name: str = "stage",
     metadata: dict | None = None,
+    stage_timeout_seconds: float = 4800.0,
 ) -> dict:
     content = types.Content(
         role="user",
@@ -38,15 +39,22 @@ async def _run_stage_async(
         else asyncio.nullcontext()
     )
 
-    with context_manager:
-        async for event in runner.run_async(
-            user_id=user_id,
-            session_id=session_id,
-            new_message=content,
-        ):
-            logger.info(f"  [{event.author}] is_final={event.is_final_response()} content={bool(event.content)}")
-            if event.is_final_response() and event.content and event.content.parts:
-                logger.info(f"  >> {event.content.parts[0].text.strip()[:150]}")
+    async def _consume_runner():
+        with context_manager:
+            async for event in runner.run_async(
+                user_id=user_id,
+                session_id=session_id,
+                new_message=content,
+            ):
+                logger.info(f"  [{event.author}] is_final={event.is_final_response()} content={bool(event.content)}")
+                if event.is_final_response() and event.content and event.content.parts:
+                    logger.info(f"  >> {event.content.parts[0].text.strip()[:150]}")
+
+    try:
+        await asyncio.wait_for(_consume_runner(), timeout=stage_timeout_seconds)
+    except asyncio.TimeoutError:
+        logger.error(f"Stage '{stage_name}' timed out after {stage_timeout_seconds}s!")
+        raise TimeoutError(f"Stage '{stage_name}' timed out after {stage_timeout_seconds}s")
 
     final_session = await session_service.get_session(
         app_name=app_name,
@@ -66,6 +74,7 @@ def run_stage(
     message: str,
     stage_name: str = "stage",
     metadata: dict | None = None,
+    stage_timeout_seconds: float = 4800.0,
 ) -> dict:
     return asyncio.run(
         _run_stage_async(
@@ -77,5 +86,6 @@ def run_stage(
             message=message,
             stage_name=stage_name,
             metadata=metadata,
+            stage_timeout_seconds=stage_timeout_seconds,
         )
     )
